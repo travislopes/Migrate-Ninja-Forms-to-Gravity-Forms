@@ -32,14 +32,13 @@ class GF_Migrate_NF extends GFAddOn {
 	
 	public function init_frontend() {
 		
-/*
 		echo '<pre>';
 		$nf_forms = $this->get_nf_forms();
 		foreach ( $nf_forms as $nf_form ) {
-			$this->convert_form( $nf_form );
+			$form = $this->convert_form( $nf_form );
+			//GFAPI::add_form( $form );
 		}
 		echo '</pre>';
-*/
 		
 	}
 
@@ -66,6 +65,10 @@ class GF_Migrate_NF extends GFAddOn {
 		// Prepare fields.
 		foreach ( $ninja_form->fields as $field ) {
 			$form = $this->prepare_field( $form, $field );
+		}
+		
+		foreach ( $form['fields'] as $i => &$field ) {
+			$field->id = $i;
 		}
 		
 		return $form;
