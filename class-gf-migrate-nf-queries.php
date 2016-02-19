@@ -23,7 +23,12 @@ class GF_Migrate_NF_Queries {
 		$tablename = $wpdb->prefix . 'nf_objectmeta';
 		$results = $wpdb->get_results( "SELECT meta_key, meta_value FROM $tablename WHERE object_id = $object_id" );
 
-		return $results;
+		$meta_array = array();
+		foreach( $results as $result ) {
+			$meta_array[$result->meta_key] = $result->meta_value;
+		}
+
+		return $meta_array;
 	}
 
 }
