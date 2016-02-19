@@ -17,4 +17,13 @@ class GF_Migrate_NF_Queries {
 		return $results;
 	}
 
+	public static function get_object_meta( $object_id ) {
+
+		global $wpdb;
+		$tablename = $wpdb->prefix . 'nf_objectmeta';
+		$results = $wpdb->get_results( "SELECT meta_key, meta_value FROM $tablename WHERE object_id = $object_id" );
+
+		return $results;
+	}
+
 }

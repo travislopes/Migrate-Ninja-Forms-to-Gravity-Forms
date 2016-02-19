@@ -28,3 +28,7 @@ class GF_Migrate_NinjaForms_Bootstrap {
 	}
 
 }
+
+//require_once('class-gf-migrate-nf-queries.php');
+//$test = GF_Migrate_NF_Queries::get_object_meta('1');
+//var_dump($test);
