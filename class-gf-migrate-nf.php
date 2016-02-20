@@ -67,8 +67,6 @@ class GF_Migrate_NF extends GFAddOn {
 	 */
 	public function convert_form( $ninja_form ) {
 
-		//var_dump( $ninja_form );
-
 		// Create a new Gravity Forms form object.
 		$form = array(
 			'title'         => rgar( $ninja_form, 'form_title' ), // Form title
@@ -107,10 +105,11 @@ class GF_Migrate_NF extends GFAddOn {
 
 			// Create a new confirmation.
 			$confirmation = array(
-				'id'   => uniqid(),
-				'name' => $nf_notification['name'],
-				'type' => 'redirect',
-				'url'  => $nf_notification['redirect_url'],
+				'id'       => uniqid(),
+				'isActive' => boolval( $nf_notification['active'] ),
+				'name'     => $nf_notification['name'],
+				'type'     => 'redirect',
+				'url'      => $nf_notification['redirect_url'],
 			);
 
 			// Add confirmation to form.
@@ -123,10 +122,11 @@ class GF_Migrate_NF extends GFAddOn {
 
 			// Create a new confirmation.
 			$confirmation = array(
-				'id'      => uniqid(),
-				'name'    => $nf_notification['name'],
-				'type'    => 'message',
-				'message' => $this->convert_to_merge_tags( $form, $nf_notification['success_msg'] ),
+				'id'       => uniqid(),
+				'isActive' => boolval( $nf_notification['active'] ),
+				'name'     => $nf_notification['name'],
+				'type'     => 'message',
+				'message'  => $this->convert_to_merge_tags( $form, $nf_notification['success_msg'] ),
 			);
 
 			// Add confirmation to form.
@@ -137,14 +137,15 @@ class GF_Migrate_NF extends GFAddOn {
 		// If notification type is email, convert to notification.
 		if ( 'email' === $nf_notification['type'] ) {
 
-			//var_dump( $nf_notification );
-
 			// Create a new notification.
 			$notification = array(
 				'id'       => uniqid(),
+				'isActive' => boolval( $nf_notification['active'] ),
 				'name'     => $nf_notification['name'],
 				'message'  => $this->convert_to_merge_tags( $form, $nf_notification['email_message'] ),
 				'subject'  => $this->convert_from_backticks( $form, $nf_notification['email_subject'] ),
+				'to'       => $this->convert_from_backticks( $form, $nf_notification['bcc'] ),
+				'toType'   => 'email',
 				'from'     => $this->convert_from_backticks( $form, $nf_notification['from_address'] ),
 				'fromName' => $this->convert_from_backticks( $form, $nf_notification['from_name'] ),
 				'replyTo'  => $this->convert_from_backticks( $form, $nf_notification['reply_to'] ),
@@ -191,10 +192,9 @@ class GF_Migrate_NF extends GFAddOn {
 			$form['fields'][ $nf_field['id'] ] = call_user_func_array( array( $this, 'prepare_' . rgar( $supported_fields, $nf_field['type'] ) . '_field' ), array( $nf_field ) );
 			
 		}
-		
 
 		return $form;		
-		
+
 	}
 	
 	/**
@@ -220,7 +220,7 @@ class GF_Migrate_NF extends GFAddOn {
 		return $field;
 		
 	}
-	
+
 	/**
 	 * Prepare a Gravity Forms textarea field.
 	 * 
@@ -245,7 +245,7 @@ class GF_Migrate_NF extends GFAddOn {
 		return $field;
 		
 	}
-	
+
 	/**
 	 * Converts any Ninja Forms shortcodes in a string to Gravity Forms merge tags.
 	 * 
@@ -299,43 +299,43 @@ class GF_Migrate_NF extends GFAddOn {
 	 * @return string $text
 	 */
 	public function convert_from_backticks( $form, $text = '' ) {
-		
+
 		// If no text was provided, return it.
 		if ( rgblank( $text ) ) {
 			return $text;
 		}
-		
+
 		// Explode the string.
 		$exploded = explode( '`', $text );
-		
+
 		// Convert fields to merge tags where needed.
 		foreach ( $exploded as &$part ) {
-			
+
 			// If this is not a field part, skip it.
 			if ( strpos( $part, 'field_' ) !== 0 ) {
 				continue;
 			}
-			
+
 			// Get the field ID.
 			$field_id = str_replace( 'field_', '', $part );
-			
+
 			// Make sure the field exists.
-			if ( ! isset ($form['fields'][ $field_id ] ) ) {
+			if ( ! isset ( $form['fields'][ $field_id ] ) ) {
 				continue;
 			}
-			
+
 			// Replace part with merge tag.
 			$part = '{' . $form['fields'][ $field_id ]->label . ':' . $field_id . '}';
-			
+
 		}
-		
+
 		// Implode it.
 		$text = implode( ',', $exploded );
-		
+
 		return $text;
-		
+
 	}
-	
+
 	/**
 	 * Get an array of supported Gravity Forms fields and their class names.
 	 * 
@@ -346,34 +346,9 @@ class GF_Migrate_NF extends GFAddOn {
 		
 		return array(
 			'_text'     => 'GF_Field_Text',
-			'_textarea' => 'textarea'
+			'_textarea' => 'textarea',
 		);
-		
-	}
 
-	/**
-	 * Get an array of Ninja Forms forms.
-	 * 
-	 * @access public
-	 * @return array $forms
-	 */
-	public function get_nf_forms() {
-		
-		// Create return array.
-		$forms = array();
-		
-		// Initialize a NF_Forms instance.
-		$nf_forms = new NF_Forms();
-		
-		foreach ( $nf_forms->get_all() as $form_id ) {
-			
-			$forms[] = new NF_Form( $form_id );
-			
-		}
-		
-		// Return forms.
-		return $forms;
-		
 	}
 
 }
