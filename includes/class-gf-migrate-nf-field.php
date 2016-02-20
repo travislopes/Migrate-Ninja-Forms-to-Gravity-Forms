@@ -100,11 +100,11 @@ class GF_Migrate_NF_Field {
 		self::add_standard_properties();
 
 		// Add Number specific properties.
-		self::$field->rangeMin = self::$nf_field['number_min'];
-		self::$field->rangeMax = self::$nf_field['number_max'];
+		self::$field->rangeMin = rgar( self::$nf_field, 'number_min' );
+		self::$field->rangeMax = rgar( self::$nf_field, 'number_max' );
 		
 		// Add currency property if needed.
-		if ( 'currency' === self::$nf_field['mask'] ) {
+		if ( rgar( self::$nf_field, 'mask' ) && 'currency' === self::$nf_field['mask'] ) {
 			self::$field->numberFormat = 'currency';
 		}
 		
