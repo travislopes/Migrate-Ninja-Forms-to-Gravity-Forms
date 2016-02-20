@@ -3,7 +3,7 @@
 GFForms::include_addon_framework();
 
 class GF_Migrate_NF extends GFAddOn {
-	
+
 	protected $_version                  = GF_MIGRATE_NINJAFORMS_VERSION;
 	protected $_min_gravityforms_version = '1.9.10';
 	protected $_slug                     = 'migrate-ninja-forms-to-gravity-forms';
@@ -16,30 +16,45 @@ class GF_Migrate_NF extends GFAddOn {
 
 	/**
 	 * Get instance of this class.
-	 * 
+	 *
 	 * @access public
 	 * @static
 	 * @return $_instance
 	 */
 	public static function get_instance() {
 
-		if ( self::$_instance == null ) {
+		if ( null === self::$_instance ) {
 			self::$_instance = new self;
 		}
 
 		return self::$_instance;
 	}
-	
+
+	/**
+	 * Register required files and filters.
+	 *
+	 * @access public
+	 * @return void
+	 */
+	public function init() {
+
+		require_once 'includes/class-gf-migrate-nf-api.php';
+
+		parent::init();
+
+	}
+
 	public function init_frontend() {
-		
-		echo '<pre>';
-		$nf_forms = $this->get_nf_forms();
-		foreach ( $nf_forms as $nf_form ) {
-			$form = $this->convert_form( $nf_form );
-			//GFAPI::add_form( $form );
-		}
-		echo '</pre>';
-		
+
+		parent::init_frontend();
+
+		//echo '<pre>';
+		//foreach ( GF_Migrate_NF_API::get_forms() as $nf_form ) {
+		//	$form = $this->convert_form( $nf_form );
+		//	var_dump( $form );
+		//}
+		//echo '</pre>';
+
 	}
 
 	/**
@@ -50,37 +65,100 @@ class GF_Migrate_NF extends GFAddOn {
 	 * @return array $form
 	 */
 	public function convert_form( $ninja_form ) {
-		
+
 		//var_dump( $ninja_form );
-		
+
 		// Create a new Gravity Forms form object.
 		$form = array(
-			'title'         => rgar( $ninja_form->settings, 'form_title' ), // Form title
-			'requireLogin'  => rgar( $ninja_form->settings, 'logged_in' ), // Require login
+			'title'         => rgar( $ninja_form, 'form_title' ), // Form title
+			'requireLogin'  => rgar( $ninja_form, 'logged_in' ), // Require login
 			'fields'        => array(),
 			'confirmations' => array(),
-			'notifications' => array()
+			'notifications' => array(),
 		);
-		
+
 		// Prepare fields.
-		foreach ( $ninja_form->fields as $field ) {
+		foreach ( $ninja_form['fields'] as $field ) {
 			$form = $this->prepare_field( $form, $field );
 		}
-		
-		foreach ( $form['fields'] as $i => &$field ) {
-			$field->id = $i;
+
+		foreach ( $ninja_form['notifications'] as $nf_notification ) {
+			$form = $this->convert_notification( $form, $nf_notification );
 		}
-		
+
 		return $form;
-		
+
 	}
-	
+
 	/**
-	 * Convert a Ninja Form field to a Gravity Forms field.
-	 * 
+	 * Convert a Ninja Forms notification to a Gravity Forms notification/confirmation.
+	 *
 	 * @access public
 	 * @param array $form - The new Gravity Forms form object
-	 * @param array $field - The Ninja Forms field
+	 * @param array $nf_notification - The Ninja Forms notification
+	 * @return array $form
+	 */
+	public function convert_notification( $form, $nf_notification ) {
+
+		// If notification type is redirect, convert to confirmation.
+		if ( 'redirect' === $nf_notification['type'] ) {
+
+			// Create a new confirmation.
+			$confirmation = array(
+				'id'   => uniqid(),
+				'name' => $nf_notification['name'],
+				'type' => 'redirect',
+				'url'  => $nf_notification['redirect_url'],
+			);
+
+			// Add confirmation to form.
+			$form['confirmations'][ $confirmation['id'] ] = $confirmation;
+
+		}
+
+		// If notification type is success message, convert to confirmation.
+		if ( 'success_message' === $nf_notification['type'] ) {
+
+			// Create a new confirmation.
+			$confirmation = array(
+				'id'      => uniqid(),
+				'name'    => $nf_notification['name'],
+				'type'    => 'message',
+				'message' => $nf_notification['success_msg'],
+			);
+
+			// Add confirmation to form.
+			$form['confirmations'][ $confirmation['id'] ] = $confirmation;
+
+		}
+
+		// If notification type is email, convert to notification.
+		if ( 'email' === $nf_notification['type'] ) {
+
+			//var_dump( $nf_notification );
+
+			// Create a new notification.
+			$notification = array(
+				'id'      => uniqid(),
+				'name'    => $nf_notification['name'],
+				'message' => $this->convert_to_merge_tags( $form, $nf_notification['email_message'] )
+			);
+			
+			// Add notification to form.
+			$form['notifications'][ $notification['id'] ] = $notification;
+
+		}
+
+		return $form;
+
+	}
+
+	/**
+	 * Convert a Ninja Form field to a Gravity Forms field.
+	 *
+	 * @access public
+	 * @param array $form - The new Gravity Forms form object
+	 * @param array $nf_field - The Ninja Forms field
 	 * @return array $form
 	 */
 	public function prepare_field( $form, $nf_field ) {
@@ -97,13 +175,13 @@ class GF_Migrate_NF extends GFAddOn {
 	
 		if ( $nf_field['type'] === '_text' ) {
 			
-			if ( $nf_field['data']['user_email'] == '1' ) {
-				$form['fields'][] = $this->prepare_email_field( $nf_field );
+			if ( $nf_field['user_email'] == '1' ) {
+				$form['fields'][ $nf_field['id'] ] = $this->prepare_email_field( $nf_field );
 			}
 		
 		} else {
 			
-			$form['fields'][] = call_user_func_array( array( $this, 'prepare_' . rgar( $supported_fields, $nf_field['type'] ) . '_field' ), array( $nf_field ) );
+			$form['fields'][ $nf_field['id'] ] = call_user_func_array( array( $this, 'prepare_' . rgar( $supported_fields, $nf_field['type'] ) . '_field' ), array( $nf_field ) );
 			
 		}
 		
@@ -125,12 +203,12 @@ class GF_Migrate_NF extends GFAddOn {
 		$field = new GF_Field_Email();
 		
 		// Set basic attributes.
-		$field->label             = rgars( $nf_field, 'data/label' );
-		$field->adminLabel        = rgars( $nf_field, 'data/admin_label' );
-		$field->isRequired        = rgars( $nf_field, 'data/req' );
-		$field->cssClass          = rgars( $nf_field, 'data/class' );
-		$field->defaultValue      = rgars( $nf_field, 'data/default_value' );
-		$field->useRichTextEditor = rgars( $nf_field, 'data/textarea_rte' );
+		$field->id           = rgar( $nf_field, 'id');
+		$field->label        = rgar( $nf_field, 'label' );
+		$field->adminLabel   = rgar( $nf_field, 'admin_label' );
+		$field->isRequired   = rgar( $nf_field, 'req' );
+		$field->cssClass     = rgar( $nf_field, 'class' );
+		$field->defaultValue = rgar( $nf_field, 'default_value' );
 		
 		return $field;
 		
@@ -149,13 +227,59 @@ class GF_Migrate_NF extends GFAddOn {
 		$field = new GF_Field_Textarea();
 		
 		// Set basic attributes.
-		$field->label        = rgars( $nf_field, 'data/label' );
-		$field->adminLabel   = rgars( $nf_field, 'data/admin_label' );
-		$field->isRequired   = rgars( $nf_field, 'data/req' );
-		$field->cssClass     = rgars( $nf_field, 'data/class' );
-		$field->defaultValue = rgars( $nf_field, 'data/default_value_type' ) === '_custom' ? rgars( $nf_field, 'data/default_value' ) : null;
+		$field->id                = rgar( $nf_field, 'id');
+		$field->label             = rgar( $nf_field, 'label' );
+		$field->adminLabel        = rgar( $nf_field, 'admin_label' );
+		$field->isRequired        = rgar( $nf_field, 'req' );
+		$field->cssClass          = rgar( $nf_field, 'class' );
+		$field->defaultValue      = rgar( $nf_field, 'default_value_type' ) === '_custom' ? rgar( $nf_field, 'default_value' ) : null;
+		$field->useRichTextEditor = rgar( $nf_field, 'textarea_rte' );
 		
 		return $field;
+		
+	}
+	
+	/**
+	 * Converts any Ninja Forms shortcodes in a string to Gravity Forms merge tags.
+	 * 
+	 * @access public
+	 * @param array $form
+	 * @param string $text (default: '')
+	 * @return string $text
+	 */
+	public function convert_to_merge_tags( $form, $text = '' ) {
+		
+		// If no text was provided, return it.
+		if ( rgblank( $text ) ) {
+			return $text;
+		}
+		
+		// Convert all fields shortcode.
+		$text = str_replace( '[ninja_forms_all_fields]', '{all_fields}', $text );
+		
+		// Search for other Ninja Forms shortcodes.
+		preg_match_all( "/(\\[ninja_forms_field id=([0-9].*)\\])/mi", $text, $matches );
+		
+		// Loop through each shortcode match and convert to merge tags.
+		foreach ( $matches[0] as $i => $shortcode ) {
+			
+			// Get the field id.
+			$field_id = $matches[2][ $i ];
+			
+			// Make sure the field exists.
+			if ( ! isset ($form['fields'][ $field_id ] ) ) {
+				continue;
+			}
+			
+			// Prepare merge tag.
+			$merge_tag = '{' . $form['fields'][ $field_id ]->label . ':' . $field_id . '}';
+			
+			// Replace shortcode.
+			$text = str_replace( $shortcode, $merge_tag, $text );
+			
+		}
+		
+		return $text;
 		
 	}
 	
