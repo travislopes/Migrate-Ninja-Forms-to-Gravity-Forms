@@ -23,6 +23,10 @@ class GF_Migrate_NF_Field {
 				
 				if ( '1' === self::$nf_field['user_email'] ) {
 					self::convert_email_field();
+				} else if ( 'date' === self::$nf_field['mask'] ) {
+					self::convert_date_field();
+				} else if ( '(999) 999-9999' === self::$nf_field['mask'] ) {
+					self::convert_phone_field();
 				} else {
 					self::convert_text_field();
 				}
@@ -36,6 +40,24 @@ class GF_Migrate_NF_Field {
 		}
 		
 		return self::$field;
+		
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms date field.
+	 *
+	 * @access public
+	 */
+	public static function convert_date_field() {
+		
+		// Create a new Phone field.
+		self::$field = new GF_Field_Date();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+
+		// Add Phone specific properties.
+		self::$field->dateFormat = 'dd/mm/yyyy';
 		
 	}
 
@@ -55,13 +77,31 @@ class GF_Migrate_NF_Field {
 	}
 
 	/**
+	 * Convert Ninja Forms field to a Gravity Forms phone field.
+	 *
+	 * @access public
+	 */
+	public static function convert_phone_field() {
+		
+		// Create a new Phone field.
+		self::$field = new GF_Field_Phone();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+
+		// Add Phone specific properties.
+		self::$field->phoneFormat = 'standard';
+		
+	}
+
+	/**
 	 * Convert Ninja Forms field to a Gravity Forms text field.
 	 *
 	 * @access public
 	 */
 	public static function convert_text_field() {
 		
-		// Create a new Textarea field.
+		// Create a new Text field.
 		self::$field = new GF_Field_Text();
 		
 		// Add standard properties.
@@ -82,7 +122,7 @@ class GF_Migrate_NF_Field {
 		// Add standard properties.
 		self::add_standard_properties();
 		
-		// Add textarea specific properties.
+		// Add Textarea specific properties.
 		self::$field->useRichTextEditor = rgar( self::$nf_field, 'textarea_rte' );
 		
 	}
