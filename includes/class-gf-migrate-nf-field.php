@@ -24,6 +24,12 @@ class GF_Migrate_NF_Field {
 				self::convert_number_field();
 				
 				break;
+				
+			case '_profile_pass':
+			
+				self::convert_password_field();
+				
+				break;
 			
 			case '_text':
 				
@@ -107,6 +113,37 @@ class GF_Migrate_NF_Field {
 		if ( rgar( self::$nf_field, 'mask' ) && 'currency' === self::$nf_field['mask'] ) {
 			self::$field->numberFormat = 'currency';
 		}
+		
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms password field.
+	 *
+	 * @access public
+	 */
+	public static function convert_password_field() {
+		
+		// Create a new Password field.
+		self::$field = new GF_Field_Password();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+		// Add Password specific properties.		
+		self::$field->inputs = array(
+			array(
+				'id'          => '1',
+				'label'       => esc_html__( 'Enter Password', 'gravityforms' ),
+				'name'        => '',
+				'customLabel' => self::$nf_field['label']
+			),
+			array(
+				'id'          => '1.2',
+				'label'       => esc_html__( 'Confirm Password', 'gravityforms' ),
+				'name'        => '',
+				'customLabel' => self::$nf_field['re_pass']
+			),
+		);
 		
 	}
 
