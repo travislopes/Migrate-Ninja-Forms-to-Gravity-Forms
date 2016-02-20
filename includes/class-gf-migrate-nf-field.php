@@ -19,12 +19,20 @@ class GF_Migrate_NF_Field {
 		// Determine what the Ninja Forms field will be converted to.
 		switch ( self::$nf_field['type'] ) {
 			
+			case '_number':
+			
+				self::convert_number_field();
+				
+				break;
+			
 			case '_text':
 				
 				if ( '1' === self::$nf_field['user_email'] ) {
 					self::convert_email_field();
 				} else if ( 'date' === self::$nf_field['mask'] ) {
 					self::convert_date_field();
+				} else if ( 'currency' === self::$nf_field['mask'] ) {
+					self::convert_number_field();
 				} else if ( '(999) 999-9999' === self::$nf_field['mask'] ) {
 					self::convert_phone_field();
 				} else {
@@ -34,7 +42,9 @@ class GF_Migrate_NF_Field {
 				break;
 			
 			case '_textarea':
+			
 				self::convert_textarea_field();
+				
 				break;
 			
 		}
@@ -73,6 +83,30 @@ class GF_Migrate_NF_Field {
 		
 		// Add standard properties.
 		self::add_standard_properties();
+		
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms number field.
+	 *
+	 * @access public
+	 */
+	public static function convert_number_field() {
+		
+		// Create a new Number field.
+		self::$field = new GF_Field_Number();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+
+		// Add Number specific properties.
+		self::$field->rangeMin = self::$nf_field['number_min'];
+		self::$field->rangeMax = self::$nf_field['number_max'];
+		
+		// Add currency property if needed.
+		if ( 'currency' === self::$nf_field['mask'] ) {
+			self::$field->numberFormat = 'currency';
+		}
 		
 	}
 
