@@ -1,4 +1,5 @@
 <?php
+
 /*
 Plugin Name: Migrate Ninja Forms to Gravity Forms
 Plugin URI: http://www.gravityforms.com
@@ -15,7 +16,14 @@ add_action( 'gform_loaded', array( 'GF_Migrate_NinjaForms_Bootstrap', 'load' ), 
 
 class GF_Migrate_NinjaForms_Bootstrap {
 
-	public static function load(){
+	/**
+	 * Register Add-On with Gravity Forms.
+	 * 
+	 * @access public
+	 * @static
+	 * @return void
+	 */
+	public static function load() {
 
 		if ( ! method_exists( 'GFForms', 'include_addon_framework' ) ) {
 			return;
@@ -29,6 +37,6 @@ class GF_Migrate_NinjaForms_Bootstrap {
 
 }
 
-//require_once('class-gf-migrate-nf-queries.php');
-//$test = GF_Migrate_NF_Queries::get_object_meta('1');
-//var_dump($test);
+function gf_migrate_ninjaforms() {
+	return GF_Migrate_NF::get_instance();
+}
