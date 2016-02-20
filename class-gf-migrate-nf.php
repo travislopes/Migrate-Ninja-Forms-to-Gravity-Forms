@@ -124,7 +124,7 @@ class GF_Migrate_NF extends GFAddOn {
 				'id'      => uniqid(),
 				'name'    => $nf_notification['name'],
 				'type'    => 'message',
-				'message' => $nf_notification['success_msg'],
+				'message' => $this->convert_to_merge_tags( $form, $nf_notification['success_msg'] ),
 			);
 
 			// Add confirmation to form.
