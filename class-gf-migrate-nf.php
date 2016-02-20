@@ -37,8 +37,9 @@ class GF_Migrate_NF extends GFAddOn {
 	 * @return void
 	 */
 	public function init() {
-
+		
 		require_once 'includes/class-gf-migrate-nf-api.php';
+		require_once 'includes/class-gf-migrate-nf-field.php';
 
 		parent::init();
 
@@ -77,8 +78,9 @@ class GF_Migrate_NF extends GFAddOn {
 		);
 
 		// Prepare fields.
-		foreach ( $ninja_form['fields'] as $field ) {
-			$form = $this->prepare_field( $form, $field );
+		foreach ( $ninja_form['fields'] as $_field ) {
+			$field                        = GF_Migrate_NF_Field::convert_field( $_field );
+			$form['fields'][ $field->id ] = $field;
 		}
 
 		// Prepare notifications.
@@ -159,91 +161,6 @@ class GF_Migrate_NF extends GFAddOn {
 
 		return $form;
 
-	}
-
-	/**
-	 * Convert a Ninja Form field to a Gravity Forms field.
-	 *
-	 * @access public
-	 * @param array $form - The new Gravity Forms form object
-	 * @param array $nf_field - The Ninja Forms field
-	 * @return array $form
-	 */
-	public function prepare_field( $form, $nf_field ) {
-		
-		// Get list of supported Gravity Forms fields.
-		$supported_fields = $this->get_supported_fields();
-		
-		//var_dump( $nf_field );
-				
-		// If this field is not supported, skip it.
-		if ( ! rgar( $supported_fields, $nf_field['type'] ) ) {
-			return $form;
-		}
-	
-		if ( $nf_field['type'] === '_text' ) {
-			
-			if ( $nf_field['user_email'] == '1' ) {
-				$form['fields'][ $nf_field['id'] ] = $this->prepare_email_field( $nf_field );
-			}
-		
-		} else {
-			
-			$form['fields'][ $nf_field['id'] ] = call_user_func_array( array( $this, 'prepare_' . rgar( $supported_fields, $nf_field['type'] ) . '_field' ), array( $nf_field ) );
-			
-		}
-
-		return $form;		
-
-	}
-	
-	/**
-	 * Prepare a Gravity Forms email field.
-	 * 
-	 * @access public
-	 * @param array $nf_field
-	 * @return object $field
-	 */
-	public function prepare_email_field( $nf_field ) {
-		
-		// Create a new Email field.
-		$field = new GF_Field_Email();
-		
-		// Set basic attributes.
-		$field->id           = rgar( $nf_field, 'id');
-		$field->label        = rgar( $nf_field, 'label' );
-		$field->adminLabel   = rgar( $nf_field, 'admin_label' );
-		$field->isRequired   = rgar( $nf_field, 'req' );
-		$field->cssClass     = rgar( $nf_field, 'class' );
-		$field->defaultValue = rgar( $nf_field, 'default_value' );
-		
-		return $field;
-		
-	}
-
-	/**
-	 * Prepare a Gravity Forms textarea field.
-	 * 
-	 * @access public
-	 * @param array $nf_field
-	 * @return object $field
-	 */
-	public function prepare_textarea_field( $nf_field ) {
-		
-		// Create a new Textarea field.
-		$field = new GF_Field_Textarea();
-		
-		// Set basic attributes.
-		$field->id                = rgar( $nf_field, 'id');
-		$field->label             = rgar( $nf_field, 'label' );
-		$field->adminLabel        = rgar( $nf_field, 'admin_label' );
-		$field->isRequired        = rgar( $nf_field, 'req' );
-		$field->cssClass          = rgar( $nf_field, 'class' );
-		$field->defaultValue      = rgar( $nf_field, 'default_value_type' ) === '_custom' ? rgar( $nf_field, 'default_value' ) : null;
-		$field->useRichTextEditor = rgar( $nf_field, 'textarea_rte' );
-		
-		return $field;
-		
 	}
 
 	/**
@@ -333,21 +250,6 @@ class GF_Migrate_NF extends GFAddOn {
 		$text = implode( ',', $exploded );
 
 		return $text;
-
-	}
-
-	/**
-	 * Get an array of supported Gravity Forms fields and their class names.
-	 * 
-	 * @access public
-	 * @return array
-	 */
-	public function get_supported_fields() {
-		
-		return array(
-			'_text'     => 'GF_Field_Text',
-			'_textarea' => 'textarea',
-		);
 
 	}
 

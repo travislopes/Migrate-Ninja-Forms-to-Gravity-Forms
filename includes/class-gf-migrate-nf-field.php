@@ -1,0 +1,107 @@
+<?php
+
+class GF_Migrate_NF_Field {
+
+	public static $field    = null;
+	public static $nf_field = array();
+
+	/**
+	 * Convert a Ninja Form field to a Gravity Forms field.
+	 *
+	 * @access public
+	 * @param array $nf_field - The Ninja Forms field
+	 * @return array $field - The new Gravity Forms field
+	 */
+	public static function convert_field( $nf_field ) {
+		
+		self::$nf_field = $nf_field;
+		
+		// Determine what the Ninja Forms field will be converted to.
+		switch ( self::$nf_field['type'] ) {
+			
+			case '_text':
+				
+				if ( '1' === self::$nf_field['user_email'] ) {
+					self::convert_email_field();
+				} else {
+					self::convert_text_field();
+				}
+				
+				break;
+			
+			case '_textarea':
+				self::convert_textarea_field();
+				break;
+			
+		}
+		
+		return self::$field;
+		
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms email field.
+	 *
+	 * @access public
+	 */
+	public static function convert_email_field() {
+		
+		// Create a new Email field.
+		self::$field = new GF_Field_Email();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms text field.
+	 *
+	 * @access public
+	 */
+	public static function convert_text_field() {
+		
+		// Create a new Textarea field.
+		self::$field = new GF_Field_Text();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms textarea field.
+	 *
+	 * @access public
+	 */
+	public static function convert_textarea_field() {
+		
+		// Create a new Textarea field.
+		self::$field = new GF_Field_Textarea();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+		// Add textarea specific properties.
+		self::$field->useRichTextEditor = rgar( self::$nf_field, 'textarea_rte' );
+		
+	}
+
+	/**
+	 * Adds standard Gravity Forms field properties.
+	 * 
+	 * @access public
+	 */
+	public static function add_standard_properties() {
+		
+		// Set properties.
+		self::$field->id           = rgar( self::$nf_field, 'id');
+		self::$field->label        = rgar( self::$nf_field, 'label' );
+		self::$field->adminLabel   = rgar( self::$nf_field, 'admin_label' );
+		self::$field->isRequired   = rgar( self::$nf_field, 'req' );
+		self::$field->cssClass     = rgar( self::$nf_field, 'class' );
+		self::$field->defaultValue = rgar( self::$nf_field, 'default_value_type' ) === '_custom' ? rgar( $nf_field, 'default_value' ) : null;		
+		
+	}
+
+}
