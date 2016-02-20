@@ -19,6 +19,12 @@ class GF_Migrate_NF_Field {
 		// Determine what the Ninja Forms field will be converted to.
 		switch ( self::$nf_field['type'] ) {
 			
+			case '_hidden':
+			
+				self::convert_hidden_field();
+				
+				break;
+			
 			case '_number':
 			
 				self::convert_number_field();
@@ -86,6 +92,21 @@ class GF_Migrate_NF_Field {
 		
 		// Create a new Email field.
 		self::$field = new GF_Field_Email();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+	}
+	
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms hidden field.
+	 *
+	 * @access public
+	 */
+	public static function convert_hidden_field() {
+		
+		// Create a new Hidden field.
+		self::$field = new GF_Field_Hidden();
 		
 		// Add standard properties.
 		self::add_standard_properties();
