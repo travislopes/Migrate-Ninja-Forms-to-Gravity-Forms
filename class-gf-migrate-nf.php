@@ -52,6 +52,7 @@ class GF_Migrate_NF extends GFAddOn {
 		//foreach ( GF_Migrate_NF_API::get_forms() as $nf_form ) {
 		//	$form = $this->convert_form( $nf_form );
 		//	var_dump( $form );
+		//echo '<hr />';
 		//}
 		//echo '</pre>';
 
@@ -82,6 +83,7 @@ class GF_Migrate_NF extends GFAddOn {
 			$form = $this->prepare_field( $form, $field );
 		}
 
+		// Prepare notifications.
 		foreach ( $ninja_form['notifications'] as $nf_notification ) {
 			$form = $this->convert_notification( $form, $nf_notification );
 		}
@@ -139,9 +141,14 @@ class GF_Migrate_NF extends GFAddOn {
 
 			// Create a new notification.
 			$notification = array(
-				'id'      => uniqid(),
-				'name'    => $nf_notification['name'],
-				'message' => $this->convert_to_merge_tags( $form, $nf_notification['email_message'] )
+				'id'       => uniqid(),
+				'name'     => $nf_notification['name'],
+				'message'  => $this->convert_to_merge_tags( $form, $nf_notification['email_message'] ),
+				'subject'  => $this->convert_from_backticks( $form, $nf_notification['email_subject'] ),
+				'from'     => $this->convert_from_backticks( $form, $nf_notification['from_address'] ),
+				'fromName' => $this->convert_from_backticks( $form, $nf_notification['from_name'] ),
+				'replyTo'  => $this->convert_from_backticks( $form, $nf_notification['reply_to'] ),
+				'bcc'      => $this->convert_from_backticks( $form, $nf_notification['bcc'] ),
 			);
 			
 			// Add notification to form.
@@ -278,6 +285,52 @@ class GF_Migrate_NF extends GFAddOn {
 			$text = str_replace( $shortcode, $merge_tag, $text );
 			
 		}
+		
+		return $text;
+		
+	}
+	
+	/**
+	 * Convert backticks separated list to a comma separated list.
+	 * 
+	 * @access public
+	 * @param array $form
+	 * @param string $text (default: '')
+	 * @return string $text
+	 */
+	public function convert_from_backticks( $form, $text = '' ) {
+		
+		// If no text was provided, return it.
+		if ( rgblank( $text ) ) {
+			return $text;
+		}
+		
+		// Explode the string.
+		$exploded = explode( '`', $text );
+		
+		// Convert fields to merge tags where needed.
+		foreach ( $exploded as &$part ) {
+			
+			// If this is not a field part, skip it.
+			if ( strpos( $part, 'field_' ) !== 0 ) {
+				continue;
+			}
+			
+			// Get the field ID.
+			$field_id = str_replace( 'field_', '', $part );
+			
+			// Make sure the field exists.
+			if ( ! isset ($form['fields'][ $field_id ] ) ) {
+				continue;
+			}
+			
+			// Replace part with merge tag.
+			$part = '{' . $form['fields'][ $field_id ]->label . ':' . $field_id . '}';
+			
+		}
+		
+		// Implode it.
+		$text = implode( ',', $exploded );
 		
 		return $text;
 		
