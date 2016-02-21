@@ -44,19 +44,34 @@ class GF_Migrate_NF extends GFAddOn {
 		parent::init();
 
 	}
+	
+	/**
+	 * Migrate Ninja Forms forms and submissions to Gravity Forms.
+	 *
+	 * @access public
+	 */
+	public function migrate_forms() {
+		
+		// Get Ninja Forms.
+		$ninja_forms = GF_Migrate_NF_API::get_forms();
 
-	public function init_frontend() {
-
-		parent::init_frontend();
-
-		//echo '<pre>';
-		//foreach ( GF_Migrate_NF_API::get_forms() as $nf_form ) {
-		//	$form = $this->convert_form( $nf_form );
-		//	var_dump( $form );
-		//echo '<hr />';
-		//}
-		//echo '</pre>';
-
+		// Convert and save each form.
+		foreach ( $ninja_forms as $ninja_form_id => $ninja_form ) {
+			
+			// Convert form.
+			$form = $this->convert_form( $ninja_form );
+			
+			// Save form and capture new ID.
+			$form_id = GFAPI::add_form( $form );
+			
+			// Convert submissions.
+			$entries = $this->convert_submissions( $ninja_form_id, $form_id );
+		
+			// Save entries.
+			GFAPI::add_entries( $entries, $form_id );
+			
+		}
+		
 	}
 
 	/**
@@ -161,6 +176,46 @@ class GF_Migrate_NF extends GFAddOn {
 
 		return $form;
 
+	}
+
+	/**
+	 * Convert Ninja Form submissions to Gravity Forms entries.
+	 * 
+	 * @access public
+	 * @param int $ninja_form_id - The Ninja Forms form ID
+	 * @param int $ninja_form_id - The new Gravity Forms form ID
+	 * @return array $entries
+	 */
+	public function convert_submissions( $ninja_form_id, $form_id = 0 ) {
+		
+		// Create array to story entries.
+		$entries = array();
+	
+		// Get submissions.
+		$submissions = GF_Migrate_NF_API::get_submissions( $ninja_form_id );
+		
+		// Add needed information to submissions and push to entries array.
+		if ( ! empty( $submissions ) ) {
+			
+			foreach ( $submissions as $entry ) {
+			
+				// Add missing information.
+				$entry['form_id']    = $form_id;
+				$entry['is_starred'] = 0;
+				$entry['is_read']    = 0;
+				$entry['ip']         = null;
+				$entry['user_agent'] = esc_html__( 'Ninja Forms Migration', 'migrate-ninja-forms-to-gravity-forms' );
+			
+				// Push to entries array.
+				$entries[] = $entry;
+				
+			}
+
+		}
+		
+		// Return entries.
+		return $entries;
+		
 	}
 
 	/**
