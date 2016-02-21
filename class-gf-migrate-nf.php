@@ -94,8 +94,19 @@ class GF_Migrate_NF extends GFAddOn {
 
 		// Prepare fields.
 		foreach ( $ninja_form['fields'] as $_field ) {
+			
+			// Convert field and save to fields array.
 			$field                        = GF_Migrate_NF_Field::convert_field( $_field );
 			$form['fields'][ $field->id ] = $field;
+			
+			// If field is a submit field, push label to button form property.
+			if ( '_submit' === $_field['type'] ) {
+				$form['button'] = array(
+					'type' => 'text',
+					'text' => $_field['label']
+				);
+			}
+			
 		}
 
 		// Prepare notifications.
