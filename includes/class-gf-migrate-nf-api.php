@@ -4,7 +4,7 @@ class GF_Migrate_NF_API {
 
 	public static $objects_table       = 'nf_objects';
 	public static $objects_meta_table  = 'nf_objectmeta';
-	public static $relationships_table = 'nf_relationships';	
+	public static $relationships_table = 'nf_relationships';
 	public static $form_fields_table   = 'ninja_forms_fields';
 
 	/**
@@ -220,15 +220,15 @@ class GF_Migrate_NF_API {
 	 * @return array $submissions
 	 */
 	public static function get_submissions( $form_id = null ) {
-		
+
 		// Create the return array.
 		$submissions = array();
-		
+
 		// If no form ID is provided, return.
 		if ( rgblank( $form_id ) ) {
 			return $submissions;
 		}
-		
+
 		// Get submission posts.
 		$_submissions = new WP_Query( array(
 			'meta_key'   => '_form_id',
@@ -236,7 +236,7 @@ class GF_Migrate_NF_API {
 			'nopaging'   => true,
 			'post_type'  => 'nf_sub',
 		) );
-		
+
 		// Get submission objects and push to submissions array.
 		if ( ! empty( $_submissions->posts ) ) {
 
