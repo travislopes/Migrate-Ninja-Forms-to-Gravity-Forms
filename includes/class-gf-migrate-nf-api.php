@@ -133,7 +133,7 @@ class GF_Migrate_NF_API {
 		$form_fields_table = self::$form_fields_table;
 
 		// Get form fields
-		$_fields = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}{$form_fields_table} WHERE `form_id` = '%d';", $form_id ), ARRAY_A );
+		$_fields = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}{$form_fields_table} WHERE `form_id` = '%d' ORDER BY `order`, `id` DESC;", $form_id ), ARRAY_A );
 
 		// Prepare form fields and add them to the return array.
 		if ( ! empty( $_fields ) ) {
