@@ -45,7 +45,7 @@ class GF_Migrate_NF_Field {
 					self::convert_date_field();
 				} else if ( 'currency' === self::$nf_field['mask'] ) {
 					self::convert_number_field();
-				} else if ( '(999) 999-9999' === self::$nf_field['mask'] ) {
+				} else if ( '(999) 999-9999' === self::$nf_field['mask'] || '1' === self::$nf_field['user_phone'] ) {
 					self::convert_phone_field();
 				} else {
 					self::convert_text_field();
