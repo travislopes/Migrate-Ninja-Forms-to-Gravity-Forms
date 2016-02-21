@@ -24,6 +24,12 @@ class GF_Migrate_NF_Field {
 				self::convert_single_checkbox_field();
 
 				break;
+				
+			case '_desc':
+			
+				self::convert_html_field();
+				
+				break;
 
 			case '_hidden':
 
@@ -162,6 +168,26 @@ class GF_Migrate_NF_Field {
 
 		// Add standard properties.
 		self::add_standard_properties();
+
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms HTML field.
+	 *
+	 * @access public
+	 */
+	public static function convert_html_field() {
+
+		// Create a new HTML field.
+		self::$field = new GF_Field_HTML();
+
+		// Add standard properties.
+		self::$field->id           = rgar( self::$nf_field, 'id');
+		self::$field->label        = rgar( self::$nf_field, 'label' );
+		self::$field->cssClass     = rgar( self::$nf_field, 'class' );
+		
+		// Add HTML specific properties.
+		self::$field->content = self::$nf_field['default_value'];
 
 	}
 
@@ -377,7 +403,7 @@ class GF_Migrate_NF_Field {
 		self::$field->adminLabel   = rgar( self::$nf_field, 'admin_label' );
 		self::$field->isRequired   = rgar( self::$nf_field, 'req' );
 		self::$field->cssClass     = rgar( self::$nf_field, 'class' );
-		self::$field->defaultValue = rgar( self::$nf_field, 'default_value_type' ) === '_custom' ? rgar( $nf_field, 'default_value' ) : null;
+		self::$field->defaultValue = rgar( self::$nf_field, 'default_value_type' ) === '_custom' || rgar( self::$nf_field, 'default_value_type' ) === '' ? rgar( self::$nf_field, 'default_value' ) : null;
 
 	}
 
