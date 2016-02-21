@@ -49,7 +49,7 @@ class GF_Migrate_NF_API {
 
 				// If form is an array, push it to the forms array.
 				if ( is_array( $form ) ) {
-					$forms[] = $form;
+					$forms[ $form_id ] = $form;
 				}
 
 			}
