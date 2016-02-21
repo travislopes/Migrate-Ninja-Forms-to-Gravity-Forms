@@ -19,10 +19,30 @@ class GF_Migrate_NF_Field {
 		// Determine what the Ninja Forms field will be converted to.
 		switch ( self::$nf_field['type'] ) {
 			
+			case '_checkbox':
+			
+				self::convert_single_checkbox_field();
+			
+				break;
+			
 			case '_hidden':
 			
 				self::convert_hidden_field();
 				
+				break;
+				
+			case '_list':
+			
+				if ( 'checkbox' === self::$nf_field['list_type'] ){
+					self::convert_checkbox_field();
+				} else if ( 'dropdown' === self::$nf_field['list_type'] ) {
+					self::convert_select_field();
+				} else if ( 'multi' === self::$nf_field['list_type'] ) {
+					self::convert_select_field( true );
+				} else if ( 'radio' === self::$nf_field['list_type'] ) {
+					self::convert_radio_field();
+				}
+			
 				break;
 			
 			case '_number':
@@ -62,6 +82,36 @@ class GF_Migrate_NF_Field {
 		}
 		
 		return self::$field;
+		
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms checkbox field.
+	 *
+	 * @access public
+	 */
+	public static function convert_checkbox_field() {
+		
+		// Create a new Checkbox field.
+		self::$field = new GF_Field_Checkbox();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+		// Add choices property.
+		self::$field->choices = array();
+		
+		// Loop through field options.
+		foreach ( self::$nf_field['list']['options'] as $option ) {
+			
+			// Add option.
+			self::$field->choices[] = array(
+				'text'       => $option['label'],
+				'value'      => $option['value'],
+				'isSelected' => $option['selected']
+			);
+			
+		}
 		
 	}
 
@@ -184,6 +234,99 @@ class GF_Migrate_NF_Field {
 		// Add Phone specific properties.
 		self::$field->phoneFormat = 'standard';
 		
+	}
+	
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms radio field.
+	 *
+	 * @access public
+	 */
+	public static function convert_radio_field() {
+		
+		// Create a new Radio field.
+		self::$field = new GF_Field_Radio();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+		// Add choices property.
+		self::$field->choices = array();
+		
+		// Loop through field options.
+		foreach ( self::$nf_field['list']['options'] as $option ) {
+			
+			// Add option.
+			self::$field->choices[] = array(
+				'text'  => $option['label'],
+				'value' => $option['value']	
+			);
+			
+			// If option is selected, set as default value.
+			if ( '1' === $option['selected'] ) {
+				self::$field->defaultValue = ! empty( $option['value'] ) ? $option['value'] : $option['text'];
+			}
+			
+		}
+
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms select field.
+	 * 
+	 * @access public
+	 * @param bool $multi (default: false) - Is field a Multi Select field?
+	 */
+	public static function convert_select_field( $multi = false ) {
+		
+		// Create a new Select field.
+		self::$field = $multi ? new GF_Field_MultiSelect() : new GF_Field_Select();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+		// Add choices property.
+		self::$field->choices = array();
+		
+		// Loop through field options.
+		foreach ( self::$nf_field['list']['options'] as $option ) {
+			
+			// Add option.
+			self::$field->choices[] = array(
+				'text'  => $option['label'],
+				'value' => $option['value']	
+			);
+			
+			// If option is selected, set as default value.
+			if ( '1' === $option['selected'] ) {
+				self::$field->defaultValue = ! empty( $option['value'] ) ? $option['value'] : $option['text'];
+			}
+			
+		}
+		
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms checkbox field.
+	 *
+	 * @access public
+	 */
+	public static function convert_single_checkbox_field() {
+		
+		// Create a new Checkbox field.
+		self::$field = new GF_Field_Checkbox();
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+		// Add choices property.
+		self::$field->choices = array(
+			array(
+				'text'       => self::$nf_field['label'],
+				'value'      => '',
+				'isSelected' => 'unchecked' === self::$nf_field['default_value'] ? '0' : '1',
+			)
+		);
+
 	}
 
 	/**
