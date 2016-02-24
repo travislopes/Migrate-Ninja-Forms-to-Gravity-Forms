@@ -315,7 +315,7 @@ class GF_Migrate_NF extends GFAddOn {
 				'isActive' => boolval( $nf_notification['active'] ),
 				'name'     => $nf_notification['name'],
 				'message'  => $this->convert_to_merge_tags( $form, $nf_notification['email_message'] ),
-				'subject'  => $this->convert_from_backticks( $form, $nf_notification['email_subject'] ),
+				'subject'  => $this->convert_from_backticks( $form, $nf_notification['email_subject'], false ),
 				'to'       => $this->convert_from_backticks( $form, $nf_notification['to'] ),
 				'toType'   => 'email',
 				'from'     => $this->convert_from_backticks( $form, $nf_notification['from_address'] ),
@@ -453,9 +453,10 @@ class GF_Migrate_NF extends GFAddOn {
 	 * @access public
 	 * @param  array $form
 	 * @param  string $text (default: '')
+	 * @param  bool $csv (default: true) Convert to CSV.
 	 * @return string $text
 	 */
-	public function convert_from_backticks( $form, $text = '' ) {
+	public function convert_from_backticks( $form, $text = '', $csv = true ) {
 
 		// If no text was provided, return it.
 		if ( rgblank( $text ) ) {
@@ -487,7 +488,7 @@ class GF_Migrate_NF extends GFAddOn {
 		}
 
 		// Implode it.
-		$text = implode( ',', $exploded );
+		$text = implode( ( $csv ? ',' : ' ' ), $exploded );
 
 		return $text;
 
