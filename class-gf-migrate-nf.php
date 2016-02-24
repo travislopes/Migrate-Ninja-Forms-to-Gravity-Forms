@@ -316,7 +316,7 @@ class GF_Migrate_NF extends GFAddOn {
 				'name'     => $nf_notification['name'],
 				'message'  => $this->convert_to_merge_tags( $form, $nf_notification['email_message'] ),
 				'subject'  => $this->convert_from_backticks( $form, $nf_notification['email_subject'] ),
-				'to'       => $this->convert_from_backticks( $form, $nf_notification['bcc'] ),
+				'to'       => $this->convert_from_backticks( $form, $nf_notification['to'] ),
 				'toType'   => 'email',
 				'from'     => $this->convert_from_backticks( $form, $nf_notification['from_address'] ),
 				'fromName' => $this->convert_from_backticks( $form, $nf_notification['from_name'] ),
