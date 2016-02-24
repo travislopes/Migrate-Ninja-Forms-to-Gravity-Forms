@@ -205,11 +205,14 @@ class GF_Migrate_NF extends GFAddOn {
 
 		// Create a new Gravity Forms form object.
 		$form = array(
-			'title'         => rgar( $ninja_form, 'form_title' ), // Form title.
-			'requireLogin'  => rgar( $ninja_form, 'logged_in' ), // Require login.
-			'fields'        => array(),
-			'confirmations' => array(),
-			'notifications' => array(),
+			'title'                => rgar( $ninja_form, 'form_title' ), // Form title.
+			'requireLogin'         => rgar( $ninja_form, 'logged_in' ), // Require login.
+			'labelPlacement'       => 'top_label',
+			'description'          => '',
+			'descriptionPlacement' => 'below',
+			'fields'               => array(),
+			'confirmations'        => array(),
+			'notifications'        => array(),
 		);
 
 		// Prepare fields.
@@ -236,6 +239,23 @@ class GF_Migrate_NF extends GFAddOn {
 		// Prepare notifications.
 		foreach ( $ninja_form['notifications'] as $nf_notification ) {
 			$form = $this->convert_notification( $form, $nf_notification );
+		}
+		
+		// If no confirmations exist, add the default notification.
+		if ( empty( $form['confirmations'] ) ) {
+			
+			$confirmation_id                           = uniqid();
+			$form['confirmations'][ $confirmation_id ] = array(
+				'id'          => $confirmation_id,
+				'name'        => __( 'Default Confirmation', 'gravityforms' ),
+				'isDefault'   => true,
+				'type'        => 'message',
+				'message'     => __( 'Thanks for contacting us! We will get in touch with you shortly.', 'gravityforms' ),
+				'url'         => '',
+				'pageId'      => '',
+				'queryString' => '',
+			);
+			
 		}
 
 		return $form;
