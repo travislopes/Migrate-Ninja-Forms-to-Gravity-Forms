@@ -155,11 +155,11 @@ class GF_Migrate_NF extends GFAddOn {
 		}
 		
 		// Migrate forms.
-		$this->migrate_forms( rgpost( 'ninja_form_id' ) );
+		$converted_forms = $this->migrate_forms( rgpost( 'ninja_form_id' ) );
 		
 		// Display success message.
-		$form_text = count( rgpost( 'ninja_form_id' ) ) > 1 ? __( 'forms', 'migrate-ninja-forms-to-gravity-forms' ) : __( 'form', 'migrate-ninja-forms-to-gravity-forms' );
-		GFCommon::add_message( sprintf( __( "Gravity Forms imported %d {$form_text} successfully.", 'migrate-ninja-forms-to-gravity-forms' ), count( rgpost( 'ninja_form_id' ) ) ) );
+		$form_text = count( $converted_forms ) > 1 ? __( 'forms', 'migrate-ninja-forms-to-gravity-forms' ) : __( 'form', 'migrate-ninja-forms-to-gravity-forms' );
+		GFCommon::add_message( sprintf( __( "Gravity Forms imported %d {$form_text} successfully.", 'migrate-ninja-forms-to-gravity-forms' ), count( $converted_forms ) ) );
 		
 	}
 
@@ -168,8 +168,12 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * @access public
 	 * @param  array $form_ids - The Ninja Forms form IDs being migrated.
+	 * @return array $converted_forms - List of new Gravity Forms form IDs.
 	 */
 	public function migrate_forms( $form_ids = array() ) {
+
+		// Setup array for converted form IDs.
+		$converted_forms = array();
 
 		// Get Ninja Forms.
 		$ninja_forms = GF_Migrate_NF_API::get_forms( $form_ids );
@@ -181,7 +185,18 @@ class GF_Migrate_NF extends GFAddOn {
 			$form = $this->convert_form( $ninja_form );
 
 			// Save form and capture new ID.
-			$form_id    = GFAPI::add_form( $form );
+			$form_id = GFAPI::add_form( $form );
+			
+			// If form could not be created, log and continue.
+			if ( is_wp_error( $form_id ) ) {
+			
+				// Log error.
+				$this->log_error( __METHOD__ . '(): Form #' . $ninja_form_id . ' could not be migrated; ' . $form_id->get_error_message() );
+				
+				continue;
+				
+			}
+			
 			$form['id'] = $form_id;
 
 			// Convert submissions.
@@ -189,8 +204,14 @@ class GF_Migrate_NF extends GFAddOn {
 
 			// Save entries.
 			GFAPI::add_entries( $entries, $form_id );
+			
+			// Add form ID to converted forms.
+			$converted_forms[] = $form_id;
 
 		}
+		
+		// Return converted form IDs.
+		return $converted_forms;
 
 	}
 
