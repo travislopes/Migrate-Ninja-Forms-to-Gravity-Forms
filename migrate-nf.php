@@ -2,8 +2,8 @@
 
 /*
 Plugin Name: Migrate Ninja Forms to Gravity Forms
-Plugin URI: http://www.gravityforms.com
-Description: Allows WordPress users to be automatically created upon submitting a Gravity Form
+Plugin URI: http://travislop.es/plugins/migrate-ninja-forms-to-gravity-forms/
+Description: Imports Ninja Forms forms and submissions into Gravity Forms
 Version: 1.0dev1
 Author: travislopes
 Author URI: http://travislop.es

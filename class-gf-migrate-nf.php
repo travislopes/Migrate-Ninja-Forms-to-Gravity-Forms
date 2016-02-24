@@ -181,10 +181,11 @@ class GF_Migrate_NF extends GFAddOn {
 			$form = $this->convert_form( $ninja_form );
 
 			// Save form and capture new ID.
-			$form_id = GFAPI::add_form( $form );
+			$form_id    = GFAPI::add_form( $form );
+			$form['id'] = $form_id;
 
 			// Convert submissions.
-			$entries = $this->convert_submissions( $ninja_form_id, $form_id );
+			$entries = $this->convert_submissions( $ninja_form, $form );
 
 			// Save entries.
 			GFAPI::add_entries( $entries, $form_id );
@@ -316,17 +317,17 @@ class GF_Migrate_NF extends GFAddOn {
 	 * Convert Ninja Form submissions to Gravity Forms entries.
 	 *
 	 * @access public
-	 * @param  int $ninja_form_id - The Ninja Forms form ID
-	 * @param  int $ninja_form_id - The new Gravity Forms form ID
+	 * @param  array $ninja_form - The Ninja Forms form being converted
+	 * @param  array $form - The new Gravity Forms form object
 	 * @return array $entries
 	 */
-	public function convert_submissions( $ninja_form_id, $form_id = 0 ) {
+	public function convert_submissions( $ninja_form, $form ) {
 
 		// Create array to story entries.
 		$entries = array();
 
 		// Get submissions.
-		$submissions = GF_Migrate_NF_API::get_submissions( $ninja_form_id );
+		$submissions = GF_Migrate_NF_API::get_submissions( $ninja_form );
 
 		// Add needed information to submissions and push to entries array.
 		if ( ! empty( $submissions ) ) {
@@ -334,11 +335,41 @@ class GF_Migrate_NF extends GFAddOn {
 			foreach ( $submissions as $entry ) {
 
 				// Add missing information.
-				$entry['form_id']    = $form_id;
+				$entry['form_id']    = $form['id'];
 				$entry['is_starred'] = 0;
 				$entry['is_read']    = 0;
 				$entry['ip']         = null;
 				$entry['user_agent'] = esc_html__( 'Ninja Forms Migration', 'migrate-ninja-forms-to-gravity-forms' );
+
+				// Convert any list data.
+				foreach ( $ninja_form['fields'] as $field ) {
+					
+					// If this is not a list field, skip it.
+					if ( '_list' !== rgar( $field, 'type' ) ) {
+						continue;
+					}
+					
+					// Get the entry value.
+					$entry_value = rgar( $entry, $field['id'] );
+					
+					// If entry value is blank or value isn't serialized, skip it.
+					if ( rgblank( $entry_value ) || ( ! rgblank( $entry_value ) && ! is_serialized( $entry_value ) ) ) {
+						continue;
+					}
+					
+					// Unseralize the entry value.
+					$entry_value = maybe_unserialize( $entry_value );
+					
+					// Remove empty array values.
+					$entry_value = array_filter( $entry_value );
+					
+					// Implode the entry value.
+					$entry_value = implode( ',', $entry_value );
+					
+					// Reassign value back to the entry object.
+					$entry[ $field['id'] ] = $entry_value;					
+					
+				}
 
 				// Push to entries array.
 				$entries[] = $entry;

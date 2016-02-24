@@ -104,6 +104,9 @@ class GF_Migrate_NF_API {
 		$form['fields']        = self::get_form_fields( $form_id );
 		$form['notifications'] = self::get_form_notifications( $form_id );
 
+		// Add form ID.
+		$form['id'] = $form_id;
+
 		// Return form.
 		return $form;
 
