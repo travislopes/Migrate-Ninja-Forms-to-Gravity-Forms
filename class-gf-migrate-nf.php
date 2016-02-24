@@ -159,7 +159,7 @@ class GF_Migrate_NF extends GFAddOn {
 		
 		// Display success message.
 		$form_text = count( $converted_forms ) > 1 ? __( 'forms', 'migrate-ninja-forms-to-gravity-forms' ) : __( 'form', 'migrate-ninja-forms-to-gravity-forms' );
-		GFCommon::add_message( sprintf( __( "Gravity Forms imported %d {$form_text} successfully.", 'migrate-ninja-forms-to-gravity-forms' ), count( $converted_forms ) ) );
+		GFCommon::add_message( sprintf( __( "Gravity Forms migrated %d {$form_text} successfully.", 'migrate-ninja-forms-to-gravity-forms' ), count( $converted_forms ) ) );
 		
 	}
 
