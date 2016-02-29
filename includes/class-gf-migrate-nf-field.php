@@ -9,7 +9,7 @@ class GF_Migrate_NF_Field {
 	 * Convert a Ninja Form field to a Gravity Forms field.
 	 *
 	 * @access public
-	 * @param array $nf_field - The Ninja Forms field
+	 * @param  array $nf_field - The Ninja Forms field.
 	 * @return array $field - The new Gravity Forms field
 	 */
 	public static function convert_field( $nf_field ) {
@@ -24,11 +24,11 @@ class GF_Migrate_NF_Field {
 				self::convert_single_checkbox_field();
 
 				break;
-				
+
 			case '_desc':
-			
+
 				self::convert_html_field();
-				
+
 				break;
 
 			case '_hidden':
@@ -40,7 +40,7 @@ class GF_Migrate_NF_Field {
 			case '_list':
 
 				$list_type = rgar( self::$nf_field, 'list_type' );
-			
+
 				if ( 'checkbox' === $list_type ) {
 					self::convert_checkbox_field();
 				} else if ( 'dropdown' === $list_type ) {
@@ -116,7 +116,7 @@ class GF_Migrate_NF_Field {
 			self::$field->choices[] = array(
 				'text'       => $option['label'],
 				'value'      => $option['value'],
-				'isSelected' => $option['selected']
+				'isSelected' => $option['selected'],
 			);
 
 		}
@@ -182,10 +182,10 @@ class GF_Migrate_NF_Field {
 		self::$field = new GF_Field_HTML();
 
 		// Add standard properties.
-		self::$field->id           = rgar( self::$nf_field, 'id');
+		self::$field->id           = rgar( self::$nf_field, 'id' );
 		self::$field->label        = rgar( self::$nf_field, 'label' );
 		self::$field->cssClass     = rgar( self::$nf_field, 'class' );
-		
+
 		// Add HTML specific properties.
 		self::$field->content = self::$nf_field['default_value'];
 
@@ -398,7 +398,7 @@ class GF_Migrate_NF_Field {
 	public static function add_standard_properties() {
 
 		// Set properties.
-		self::$field->id           = rgar( self::$nf_field, 'id');
+		self::$field->id           = rgar( self::$nf_field, 'id' );
 		self::$field->label        = rgar( self::$nf_field, 'label' );
 		self::$field->adminLabel   = rgar( self::$nf_field, 'admin_label' );
 		self::$field->isRequired   = rgar( self::$nf_field, 'req' );
