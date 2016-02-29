@@ -4,15 +4,78 @@ GFForms::include_addon_framework();
 
 class GF_Migrate_NF extends GFAddOn {
 
-	protected $_version                  = GF_MIGRATE_NINJAFORMS_VERSION;
+    /**
+     * Migrate Ninja Forms to Gravity Forms version number
+     *
+     * @since 1.0
+     * @access protected
+     * @var string $_version Plugin version number
+     */
+	protected $_version = GF_MIGRATE_NINJAFORMS_VERSION;
+    /**
+     * Minimum supported version of Gravity Forms
+     *
+     * @since 1.0
+     * @access protected
+     * @var string $_min_gravityforms_version The minimum version of Gravity Forms this plugin supports
+     */
 	protected $_min_gravityforms_version = '1.9.10';
-	protected $_slug                     = 'migrate-ninja-forms-to-gravity-forms';
-	protected $_path                     = 'migrate-ninja-forms-to-gravity-forms/migrate-nf.php';
-	protected $_full_path                = __FILE__;
-	protected $_url                      = 'http://www.gravityforms.com';
-	protected $_title                    = 'Migrate Ninja Forms';
-	protected $_short_title              = 'Migrate Ninja Forms';
-	private static $_instance            = null;
+    /**
+     * The plugin slug.  Primarily used in the directory name
+     *
+     * @since 1.0
+     * @access protected
+     * @var string $_slug The slug (no slimy, and not a bug)
+     */
+	protected $_slug = 'migrate-ninja-forms-to-gravity-forms';
+    /**
+     * Path to the plugin file, relative to the wp-content/plugins directory
+     *
+     * @since 1.0
+     * @access protected
+     * @var string $_path The path.
+     */
+	protected $_path = 'migrate-ninja-forms-to-gravity-forms/migrate-nf.php';
+    /**
+     * The absolute path to the main class file.
+     *
+     * @since 1.0
+     * @access protected
+     * @var string $_full_path The path.
+     */
+	protected $_full_path = __FILE__;
+    /**
+     * The URL for more information about this plugin
+     *
+     * @since 1.0
+     * @access protected
+     * @var string $_url A super cool site that all the cool kids go to
+     */
+	protected $_url = 'http://travislop.es/plugins/migrate-ninja-forms-to-gravity-forms/';
+    /**
+     * The title of this plugin
+     *
+     * @since 1.0
+     * @access protected
+     * @var string $_title The title
+     */
+	protected $_title = 'Migrate Ninja Forms';
+    /**
+     * The shorter title
+     *
+     * @since 1.0
+     * @access protected
+     * @var string $_short_title The title.  In case the other one was too long for you ;)
+     */
+	protected $_short_title = 'Migrate Ninja Forms';
+    /**
+     * The instance of this class.  Used to instantiate.
+     *
+     * @since 1.0
+     * @access protected
+     * @var object $_instance The instance
+     */
+	private static $_instance = null;
 
 	/**
 	 * Get instance of this class.
