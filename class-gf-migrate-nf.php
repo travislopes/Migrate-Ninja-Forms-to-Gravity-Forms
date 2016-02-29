@@ -2,87 +2,96 @@
 
 GFForms::include_addon_framework();
 
+/**
+ * Class GF_Migrate_NF
+ *
+ * Uses the Gravity Forms Add-On Framework use native elements
+ *
+ * @since 1.0
+ */
 class GF_Migrate_NF extends GFAddOn {
 
     /**
      * Migrate Ninja Forms to Gravity Forms version number
      *
-     * @since 1.0
+     * @since  1.0
      * @access protected
-     * @var string $_version Plugin version number
+     * @var    string $_version Plugin version number
      */
 	protected $_version = GF_MIGRATE_NINJAFORMS_VERSION;
     /**
      * Minimum supported version of Gravity Forms
      *
-     * @since 1.0
+     * @since  1.0
      * @access protected
-     * @var string $_min_gravityforms_version The minimum version of Gravity Forms this plugin supports
+     * @var    string $_min_gravityforms_version The minimum version of Gravity Forms this plugin supports
      */
 	protected $_min_gravityforms_version = '1.9.10';
     /**
      * The plugin slug.  Primarily used in the directory name
      *
-     * @since 1.0
+     * @since  1.0
      * @access protected
-     * @var string $_slug The slug (no slimy, and not a bug)
+     * @var    string $_slug The slug (no slimy, and not a bug)
      */
 	protected $_slug = 'migrate-ninja-forms-to-gravity-forms';
     /**
      * Path to the plugin file, relative to the wp-content/plugins directory
      *
-     * @since 1.0
+     * @since  1.0
      * @access protected
-     * @var string $_path The path.
+     * @var    string $_path The path.
      */
 	protected $_path = 'migrate-ninja-forms-to-gravity-forms/migrate-nf.php';
     /**
      * The absolute path to the main class file.
      *
-     * @since 1.0
+     * @since  1.0
      * @access protected
-     * @var string $_full_path The path.
+     * @var    string $_full_path The path.
      */
 	protected $_full_path = __FILE__;
     /**
      * The URL for more information about this plugin
      *
-     * @since 1.0
+     * @since  1.0
      * @access protected
-     * @var string $_url A super cool site that all the cool kids go to
+     * @var    string $_url A super cool site that all the cool kids go to
      */
 	protected $_url = 'http://travislop.es/plugins/migrate-ninja-forms-to-gravity-forms/';
     /**
      * The title of this plugin
      *
-     * @since 1.0
+     * @since  1.0
      * @access protected
-     * @var string $_title The title
+     * @var    string $_title The title
      */
 	protected $_title = 'Migrate Ninja Forms';
     /**
      * The shorter title
      *
-     * @since 1.0
+     * @since  1.0
      * @access protected
-     * @var string $_short_title The title.  In case the other one was too long for you ;)
+     * @var    string $_short_title The title.  In case the other one was too long for you ;)
      */
 	protected $_short_title = 'Migrate Ninja Forms';
     /**
      * The instance of this class.  Used to instantiate.
      *
-     * @since 1.0
+     * @since  1.0
      * @access protected
-     * @var object $_instance The instance
+     * @var    object $_instance The instance
      */
 	private static $_instance = null;
 
 	/**
-	 * Get instance of this class.
-	 *
+	 * Get an instance of this class.
+     *
+	 * @since  1.0
 	 * @access public
 	 * @static
-	 * @return $_instance
+     *
+	 * @return object $_instance The instance of this object
 	 */
 	public static function get_instance() {
 
@@ -95,7 +104,8 @@ class GF_Migrate_NF extends GFAddOn {
 
 	/**
 	 * Register required files and filters.
-	 *
+     *
+	 * @since  1.0
 	 * @access public
 	 */
 	public function init() {
@@ -116,10 +126,15 @@ class GF_Migrate_NF extends GFAddOn {
 	
 	/**
 	 * Add "Migrate Ninja Forms" tab to Migrate/Export page.
-	 * 
+     *
+     * Callback from gform_export_menu filer, defined within init()
+     *
+	 * @since  1.0
+     * @see    $this->init()
 	 * @access public
-	 * @param  array $tabs - Tabs on the Migrate/Export page.
-	 * @return array $tabs
+	 * @param  array $tabs Tabs from the Migrate/Export page.
+     *
+	 * @return array $tabs The tab listing, with our additional tab
 	 */
 	public function add_migrate_tab( $tabs ) {
 		
@@ -134,18 +149,22 @@ class GF_Migrate_NF extends GFAddOn {
 	}
 	
 	/**
-	 * Render "Migrate Ninja Forms" tab.
-	 * 
+	 * Renders "Migrate Ninja Forms" tab content
+     *
+     * Fired from action call in init()
+     *
+     * @since  1.0
+     * @see    $this->init()
 	 * @access public
 	 */
 	public function migrate_forms_page() {
 		
 		$html = '';
 		
-		// Handle form submission.
+		// Handle migration form submission.
 		$this->maybe_migrate_forms();
 		
-		// Get all Ninja Forms forms.
+		// Get all forms from Ninja Forms.
 		$forms = GF_Migrate_NF_API::get_forms();
 		
 		// Display page header.
@@ -193,8 +212,17 @@ class GF_Migrate_NF extends GFAddOn {
 	}
 
 	/**
-	 * Handle "Migrate Ninja Forms" form submission.
-	 * 
+	 * Handles the "Migrate Ninja Forms" page form submission.
+     *
+     * Checks the following:
+     *  User has permissions
+     *  Form was submitted
+     *  Nonce exists
+     *  A form was selected for migration
+     *
+     * Then, begins the migration.
+     *
+	 * @since  1.0
 	 * @access public
 	 */
 	public function maybe_migrate_forms() {
@@ -227,11 +255,13 @@ class GF_Migrate_NF extends GFAddOn {
 	}
 
 	/**
-	 * Migrate Ninja Forms forms and submissions to Gravity Forms.
-	 *
+	 * Migrates forms and submissions from Ninja Forms to Gravity Forms.
+     *
+	 * @since  1.0
 	 * @access public
-	 * @param  array $form_ids - The Ninja Forms form IDs being migrated.
-	 * @return array $converted_forms - List of new Gravity Forms form IDs.
+	 * @param  array $form_ids The Ninja Forms form IDs being migrated.
+     *
+	 * @return array $converted_forms List of new Gravity Forms form IDs.
 	 */
 	public function migrate_forms( $form_ids = array() ) {
 
@@ -279,11 +309,13 @@ class GF_Migrate_NF extends GFAddOn {
 	}
 
 	/**
-	 * Convert a Ninja Form to a Gravity Form.
-	 *
+	 * Converts a Ninja Form to a Gravity Form.
+     *
+	 * @since  1.0
 	 * @access public
-	 * @param  array $ninja_form - The Ninja Forms form being converted.
-	 * @return array $form - The new Gravity Forms form object.
+	 * @param  array $ninja_form The Ninja Forms form being converted.
+     *
+	 * @return array $form The newly created Gravity Forms form object.
 	 */
 	public function convert_form( $ninja_form ) {
 
@@ -348,11 +380,13 @@ class GF_Migrate_NF extends GFAddOn {
 
 	/**
 	 * Convert a Ninja Forms notification to a Gravity Forms notification/confirmation.
-	 *
+     *
+	 * @since  1.0
 	 * @access public
-	 * @param  array $form - The new Gravity Forms form object.
-	 * @param  array $nf_notification - The Ninja Forms notification.
-	 * @return array $form
+	 * @param  array $form            The new Gravity Forms form object.
+	 * @param  array $nf_notification The Ninja Forms notification.
+     *
+	 * @return array $form The Gravity Forms form object
 	 */
 	public function convert_notification( $form, $nf_notification ) {
 
@@ -418,12 +452,14 @@ class GF_Migrate_NF extends GFAddOn {
 	}
 
 	/**
-	 * Convert Ninja Form submissions to Gravity Forms entries.
-	 *
+	 * Convert Ninja Forms submissions to Gravity Forms entries.
+     *
+	 * @since  1.0
 	 * @access public
-	 * @param  array $ninja_form - The Ninja Forms form being converted
-	 * @param  array $form - The new Gravity Forms form object
-	 * @return array $entries
+	 * @param  array $ninja_form The Ninja Forms form being converted
+	 * @param  array $form       The new Gravity Forms form object
+     *
+	 * @return array $entries Containing multiple Gravity Forms entry objects
 	 */
 	public function convert_submissions( $ninja_form, $form ) {
 
@@ -489,11 +525,13 @@ class GF_Migrate_NF extends GFAddOn {
 
 	/**
 	 * Converts any Ninja Forms shortcodes in a string to Gravity Forms merge tags.
-	 *
+     *
+	 * @since  1.0
 	 * @access public
-	 * @param  array $form
-	 * @param  string $text (default: '')
-	 * @return string $text
+	 * @param  array  $form The Gravity Forms form object
+	 * @param  string $text The Ninja Forms merge tag. Default ''
+     *
+	 * @return string $text The Gravity Forms merge tag
 	 */
 	public function convert_to_merge_tags( $form, $text = '' ) {
 
@@ -533,11 +571,15 @@ class GF_Migrate_NF extends GFAddOn {
 
 	/**
 	 * Convert backticks separated list to a comma separated list.
-	 *
+     *
+     * Backticks in lists are bad, and you should feel bad.
+     *
+	 * @since  1.0
 	 * @access public
-	 * @param  array $form
-	 * @param  string $text (default: '')
-	 * @param  bool $csv (default: true) Convert to CSV.
+	 * @param  array  $form The Gravity Forms form object
+	 * @param  string $text The string to convert
+	 * @param  bool   $csv  Convert to CSV. Default true
+     *
 	 * @return string $text
 	 */
 	public function convert_from_backticks( $form, $text = '', $csv = true ) {
