@@ -3,7 +3,7 @@
 /*
 Plugin Name: Migrate Ninja Forms to Gravity Forms
 Plugin URI: http://travislop.es/plugins/migrate-ninja-forms-to-gravity-forms/
-Description: Imports Ninja Forms forms and submissions into Gravity Forms
+Description: Imports content from Ninja Forms into Gravity Forms
 Version: 1.0
 Author: travislopes
 Author URI: http://travislop.es

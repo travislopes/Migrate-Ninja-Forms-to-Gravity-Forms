@@ -5,12 +5,27 @@ Requires at least: 4.0.0
 Tested up to: 4.4.2
 Stable tag: 4.4.2
 
-Imports Ninja Forms forms and submissions into Gravity Forms.
+Imports content from Ninja Forms into Gravity Forms
 
 == Description ==
-Migrate Ninja Forms to Gravity Forms adds a new tab to the Gravity Forms Import/Export page that allows you to migrate your Ninja Forms forms and submissions to Gravity Forms.
+Migrate Ninja Forms to Gravity Forms is a plugin to do exactly what the name describes; it migrates form content from Ninja Forms to Gravity forms.
 
-This plugin supports the following Ninja Forms field types: Checkbox, Description, Hidden, List, Phone, Password, Text and Textarea. All list fields are converted to their similar Gravity Forms field type: Checkbox, Multi Select, Radio or Select. Ninja Forms text fields will also be converted to Gravity Forms field types based on their input mask.
+Developed with ease-of-use in mind, it will simply add a new tab to Gravity Forms.  This allows you you to to move your content from Gravity Forms to Ninja Forms without the hassle of a typical, manual migration.
+
+The Migrate Ninja Forms to Gravity Forms plugin supports the following field types:
+
+* Checkbox
+* Description
+* Hidden
+* List
+* Phone
+* Password
+* Text
+* Textarea
+
+List fields from Ninja Forms are converted to their similar field types in Gravity Forms, such as Checkbox, Select, Multi-Select fields, or Radio fields.
+
+Text fields from Ninja Forms are converted to supported Gravity Forms field based on their input mask, such as Name, Address, Email, etc.
 
 == Installation ==
 = Requirements =
