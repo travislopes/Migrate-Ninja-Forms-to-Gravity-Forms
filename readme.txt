@@ -25,7 +25,7 @@ The Migrate Ninja Forms to Gravity Forms plugin supports the following field typ
 
 List fields from Ninja Forms are converted to their similar field types in Gravity Forms, such as Checkbox, Select, Multi-Select fields, or Radio fields.
 
-Text fields from Ninja Forms are converted to supported Gravity Forms field based on their input mask, such as Name, Address, Email, etc.
+Text fields from Ninja Forms are converted to supported Gravity Forms field based on their input mask, such as Date, Email, Number (for currency and numbers) and Phone.
 
 == Installation ==
 = Requirements =
@@ -39,5 +39,5 @@ Text fields from Ninja Forms are converted to supported Gravity Forms field base
 1. Activate the plugin through the 'Plugins' menu in WordPress
 
 == Changelog ==
-= v1.0 =
+= v0.1 =
 * Initial release
