@@ -249,12 +249,13 @@ class GF_Migrate_NF extends GFAddOn {
 		check_admin_referer( 'gform_ninja_forms_migrate', 'gform_ninja_forms_migrate_nonce' );
 
 		// If no forms were chosen to be migrated, return.
-		if ( empty( rgpost( 'ninja_form_id' ) ) ) {
+		$ninja_form_ids = rgpost( 'ninja_form_id' );
+		if ( empty( $ninja_form_ids ) ) {
 			return;
 		}
 
 		// Migrate forms.
-		$converted_forms = $this->migrate_forms( rgpost( 'ninja_form_id' ) );
+		$converted_forms = $this->migrate_forms( $ninja_form_ids );
 
 		// Display success message.
 		$form_text = count( $converted_forms ) > 1 ? __( 'forms', 'migrate-ninja-forms-to-gravity-forms' ) : __( 'form', 'migrate-ninja-forms-to-gravity-forms' );
