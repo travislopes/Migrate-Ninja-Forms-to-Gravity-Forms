@@ -44,6 +44,10 @@ The Migrate Ninja Forms to Gravity Forms plugin migrates the following Ninja For
 * CSS Classes
 * Default Value (only custom default values are supported)
 
+== Screenshots ==
+
+1. Migration Form Selection.
+
 == Installation ==
 = Requirements =
 * WordPress version 4.0.0 and later (tested at 4.4.2)
