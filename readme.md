@@ -8,7 +8,7 @@
 ### Description
 Migrate Ninja Forms to Gravity Forms is a plugin to do exactly what the name describes; it migrates form content from Ninja Forms to Gravity Forms.
 
-Developed with ease-of-use in mind, it will simply add a new tab to Gravity Forms.  This allows you you to to move your content from Gravity Forms to Ninja Forms without the hassle of a typical, manual migration.
+Developed with ease-of-use in mind, it will simply add a new tab to Gravity Forms.  This allows you you to to move your content from Ninja Forms to Gravity Forms without the hassle of a typical, manual migration.
 
 #### Field Types
 
