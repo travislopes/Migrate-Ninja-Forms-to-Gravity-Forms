@@ -7,14 +7,14 @@ GFForms::include_addon_framework();
  *
  * Uses the Gravity Forms Add-On Framework use native elements
  *
- * @since 1.0
+ * @since 0.1
  */
 class GF_Migrate_NF extends GFAddOn {
 
 	/**
 	 * Migrate Ninja Forms to Gravity Forms version number
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access protected
 	 * @var    string $_version Plugin version number
 	 */
@@ -23,7 +23,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Minimum supported version of Gravity Forms
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access protected
 	 * @var    string $_min_gravityforms_version The minimum version of Gravity Forms this plugin supports
 	 */
@@ -32,7 +32,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * The plugin slug.  Primarily used in the directory name
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access protected
 	 * @var    string $_slug The slug (no slimy, and not a bug)
 	 */
@@ -41,7 +41,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Path to the plugin file, relative to the wp-content/plugins directory
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access protected
 	 * @var    string $_path The path.
 	 */
@@ -50,7 +50,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * The absolute path to the main class file.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access protected
 	 * @var    string $_full_path The path.
 	 */
@@ -59,7 +59,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * The URL for more information about this plugin
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access protected
 	 * @var    string $_url A super cool site that all the cool kids go to
 	 */
@@ -68,7 +68,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * The title of this plugin
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access protected
 	 * @var    string $_title The title
 	 */
@@ -77,7 +77,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * The shorter title
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access protected
 	 * @var    string $_short_title The title.  In case the other one was too long for you ;)
 	 */
@@ -86,7 +86,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * The instance of this class.  Used to instantiate.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access protected
 	 * @var    object $_instance The instance
 	 */
@@ -95,7 +95,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Get an instance of this class.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access public
 	 * @static
 	 *
@@ -113,7 +113,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Register required files and filters.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access public
 	 */
 	public function init() {
@@ -137,7 +137,7 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * Callback from gform_export_menu filer, defined within init()
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @see    $this->init()
 	 * @access public
 	 * @param  array $tabs Tabs from the Migrate/Export page.
@@ -161,7 +161,7 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * Fired from action call in init()
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @see    $this->init()
 	 * @access public
 	 */
@@ -230,7 +230,7 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * Then, begins the migration.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access public
 	 */
 	public function maybe_migrate_forms() {
@@ -266,7 +266,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Migrates forms and submissions from Ninja Forms to Gravity Forms.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access public
 	 * @param  array $form_ids The Ninja Forms form IDs being migrated.
 	 *
@@ -320,7 +320,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Converts a Ninja Form to a Gravity Form.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access public
 	 * @param  array $ninja_form The Ninja Forms form being converted.
 	 *
@@ -390,7 +390,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Convert a Ninja Forms notification to a Gravity Forms notification/confirmation.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access public
 	 * @param  array $form            The new Gravity Forms form object.
 	 * @param  array $nf_notification The Ninja Forms notification.
@@ -463,7 +463,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Convert Ninja Forms submissions to Gravity Forms entries.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access public
 	 * @param  array $ninja_form The Ninja Forms form being converted.
 	 * @param  array $form       The new Gravity Forms form object.
@@ -535,7 +535,7 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Converts any Ninja Forms shortcodes in a string to Gravity Forms merge tags.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access public
 	 * @param  array  $form The Gravity Forms form object.
 	 * @param  string $text The Ninja Forms merge tag. (default: '')
@@ -583,7 +583,7 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * Backticks in lists are bad, and you should feel bad.
 	 *
-	 * @since  1.0
+	 * @since  0.1
 	 * @access public
 	 * @param  array  $form The Gravity Forms form object.
 	 * @param  string $text The string to convert.
