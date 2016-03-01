@@ -2,41 +2,52 @@
 
 class GF_Migrate_NF_Field {
 
+	/**
+	 * Stores the Gravity Forms field information for the applicable field
+	 *
+	 * @since  0.1
+	 * @access public
+	 * @static
+	 * @var mixed $field The Gravity Forms field object
+	 */
 	public static $field    = null;
+
+	/**
+	 * The Ninja Forms field data that is being converted
+	 *
+	 * @since  0.1
+	 * @access public
+	 * @static
+	 * @var array $field The Ninja Forms field data
+	 */
 	public static $nf_field = array();
 
 	/**
-	 * Convert a Ninja Form field to a Gravity Forms field.
+	 * Convert a Ninja Forms field to a Gravity Forms field.
 	 *
+	 * @since  0.1
 	 * @access public
-	 * @param  array $nf_field - The Ninja Forms field.
+	 * @param  array $nf_field The Ninja Forms field.
+	 *
 	 * @return array $field - The new Gravity Forms field
 	 */
 	public static function convert_field( $nf_field ) {
 
+		// Stores the field to be converted within the class property for use later
 		self::$nf_field = $nf_field;
 
 		// Determine what the Ninja Forms field will be converted to.
 		switch ( self::$nf_field['type'] ) {
 
 			case '_checkbox':
-
 				self::convert_single_checkbox_field();
-
 				break;
-
 			case '_desc':
-
 				self::convert_html_field();
-
 				break;
-
 			case '_hidden':
-
 				self::convert_hidden_field();
-
 				break;
-
 			case '_list':
 
 				$list_type = rgar( self::$nf_field, 'list_type' );
@@ -54,17 +65,11 @@ class GF_Migrate_NF_Field {
 				break;
 
 			case '_number':
-
 				self::convert_number_field();
-
 				break;
-
 			case '_profile_pass':
-
 				self::convert_password_field();
-
 				break;
-
 			case '_text':
 
 				if ( '1' === self::$nf_field['user_email'] ) {
@@ -82,9 +87,7 @@ class GF_Migrate_NF_Field {
 				break;
 
 			case '_textarea':
-
 				self::convert_textarea_field();
-
 				break;
 
 		}
@@ -96,6 +99,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms checkbox field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_checkbox_field() {
@@ -126,6 +130,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms date field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_date_field() {
@@ -144,6 +149,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms email field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_email_field() {
@@ -159,6 +165,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms hidden field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_hidden_field() {
@@ -174,6 +181,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms HTML field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_html_field() {
@@ -194,6 +202,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms number field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_number_field() {
@@ -218,6 +227,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms password field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_password_field() {
@@ -249,6 +259,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms phone field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_phone_field() {
@@ -267,6 +278,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms radio field.
 	 *
+	 * @0.1
 	 * @access public
 	 */
 	public static function convert_radio_field() {
@@ -301,8 +313,9 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms select field.
 	 *
+	 * @since  0.1
 	 * @access public
-	 * @param bool $multi (default: false) - Is field a Multi Select field?
+	 * @param  bool $multi Is field a Multi Select field? Default false
 	 */
 	public static function convert_select_field( $multi = false ) {
 
@@ -336,6 +349,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms checkbox field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_single_checkbox_field() {
@@ -360,6 +374,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms text field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_text_field() {
@@ -375,6 +390,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms textarea field.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_textarea_field() {
@@ -393,6 +409,7 @@ class GF_Migrate_NF_Field {
 	/**
 	 * Adds standard Gravity Forms field properties.
 	 *
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function add_standard_properties() {
