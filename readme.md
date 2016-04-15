@@ -43,6 +43,8 @@ The Migrate Ninja Forms to Gravity Forms plugin migrates the following Ninja For
 * Default Value (only custom default values are supported)
 
 ### Changelog
+* v0.1.1
+	* Updated notification conversion to not use boolval().
 * v0.1
 	* Initial release
 

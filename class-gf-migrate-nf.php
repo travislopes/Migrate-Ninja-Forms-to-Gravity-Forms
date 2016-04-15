@@ -405,7 +405,7 @@ class GF_Migrate_NF extends GFAddOn {
 			// Create a new confirmation.
 			$confirmation = array(
 				'id'       => uniqid(),
-				'isActive' => boolval( $nf_notification['active'] ),
+				'isActive' => '1' === $nf_notification['active'] ? true : false,
 				'name'     => $nf_notification['name'],
 				'type'     => 'redirect',
 				'url'      => $nf_notification['redirect_url'],
@@ -422,7 +422,7 @@ class GF_Migrate_NF extends GFAddOn {
 			// Create a new confirmation.
 			$confirmation = array(
 				'id'       => uniqid(),
-				'isActive' => boolval( $nf_notification['active'] ),
+				'isActive' => '1' === $nf_notification['active'] ? true : false,
 				'name'     => $nf_notification['name'],
 				'type'     => 'message',
 				'message'  => $this->convert_to_merge_tags( $form, $nf_notification['success_msg'] ),
@@ -439,7 +439,7 @@ class GF_Migrate_NF extends GFAddOn {
 			// Create a new notification.
 			$notification = array(
 				'id'       => uniqid(),
-				'isActive' => boolval( $nf_notification['active'] ),
+				'isActive' => '1' === $nf_notification['active'] ? true : false,
 				'name'     => $nf_notification['name'],
 				'message'  => $this->convert_to_merge_tags( $form, $nf_notification['email_message'] ),
 				'subject'  => $this->convert_from_backticks( $form, $nf_notification['email_subject'], false ),
