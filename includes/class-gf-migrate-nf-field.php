@@ -10,7 +10,7 @@ class GF_Migrate_NF_Field {
 	 * @static
 	 * @var mixed $field The Gravity Forms field object
 	 */
-	public static $field    = null;
+	public static $field = null;
 
 	/**
 	 * The Ninja Forms field data that is being converted

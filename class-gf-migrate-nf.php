@@ -348,7 +348,7 @@ class GF_Migrate_NF extends GFAddOn {
 
 			// Save to fields array if converted.
 			if ( ! is_null( $field ) ) {
-				$form['fields'][ $field->id ] = $field;
+				$form['fields'][] = $field;
 			}
 
 			// If field is a submit field, push label to button form property.
