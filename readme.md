@@ -43,6 +43,8 @@ The Migrate Ninja Forms to Gravity Forms plugin migrates the following Ninja For
 * Default Value (only custom default values are supported)
 
 ### Changelog
+* v0.1.3
+	* Fixed issue with checkbox options not being mapped correctly.
 * v0.1.2
 	* Fixed issue where fields could not be edited after migration.
 * v0.1.1

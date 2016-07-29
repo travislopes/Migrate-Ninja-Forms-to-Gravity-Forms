@@ -114,13 +114,22 @@ class GF_Migrate_NF_Field {
 		self::$field->choices = array();
 
 		// Loop through field options.
-		foreach ( self::$nf_field['list']['options'] as $option ) {
+		foreach ( self::$nf_field['list']['options'] as $i => $option ) {
 
-			// Add option.
+			// Get checkbox ID.
+			$id = $i + 1;
+
+			// Add option choices.
 			self::$field->choices[] = array(
 				'text'       => $option['label'],
 				'value'      => $option['value'],
 				'isSelected' => $option['selected'],
+			);
+
+			// Add option input.
+			self::$field->inputs[] = array(
+				'id'    => self::$field->id . '.' . $id,
+				'label' => $option['label'],
 			);
 
 		}
@@ -295,7 +304,7 @@ class GF_Migrate_NF_Field {
 		// Loop through field options.
 		foreach ( self::$nf_field['list']['options'] as $option ) {
 
-			// Add option.
+			// Add option choice.
 			self::$field->choices[] = array(
 				'text'  => $option['label'],
 				'value' => $option['value'],
