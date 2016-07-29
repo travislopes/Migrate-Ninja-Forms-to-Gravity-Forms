@@ -119,6 +119,11 @@ class GF_Migrate_NF_Field {
 			// Get checkbox ID.
 			$id = $i + 1;
 
+			// Skip multiple of 10 on checkbox ID.
+			if ( 0 === $id % 10 ) {
+				$id++;
+			}
+
 			// Add option choices.
 			self::$field->choices[] = array(
 				'text'       => $option['label'],
