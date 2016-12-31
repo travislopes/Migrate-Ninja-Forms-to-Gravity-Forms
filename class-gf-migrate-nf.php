@@ -132,6 +132,12 @@ class GF_Migrate_NF extends GFAddOn {
 
 	}
 
+
+
+
+
+	// # MIGRATION PAGE ------------------------------------------------------------------------------------------------
+
 	/**
 	 * Add "Migrate Ninja Forms" tab to Migrate/Export page.
 	 *
@@ -140,7 +146,8 @@ class GF_Migrate_NF extends GFAddOn {
 	 * @since  0.1
 	 * @see    $this->init()
 	 * @access public
-	 * @param  array $tabs Tabs from the Migrate/Export page.
+	 *
+	 * @param array $tabs Tabs from the Migrate/Export page.
 	 *
 	 * @return array $tabs The tab listing, with our additional tab
 	 */
@@ -258,7 +265,7 @@ class GF_Migrate_NF extends GFAddOn {
 		}
 
 		// Migrate forms.
-		$converted_forms = $this->migrate_forms( $ninja_form_ids );
+		$converted_forms = $this->migrate_nf2_forms( $ninja_form_ids );
 
 		// Display success message.
 		$form_text = count( $converted_forms ) > 1 ? __( 'forms', 'migrate-ninja-forms-to-gravity-forms' ) : __( 'form', 'migrate-ninja-forms-to-gravity-forms' );
@@ -267,15 +274,16 @@ class GF_Migrate_NF extends GFAddOn {
 	}
 
 	/**
-	 * Migrates forms and submissions from Ninja Forms to Gravity Forms.
+	 * Migrates forms and submissions from Ninja Forms 2 to Gravity Forms.
 	 *
 	 * @since  0.1
 	 * @access public
-	 * @param  array $form_ids The Ninja Forms form IDs being migrated.
+	 *
+	 * @param array $form_ids The Ninja Forms form IDs being migrated.
 	 *
 	 * @return array $converted_forms List of new Gravity Forms form IDs.
 	 */
-	public function migrate_forms( $form_ids = array() ) {
+	public function migrate_nf2_forms( $form_ids = array() ) {
 
 		// Initialize converted form IDs array.
 		$converted_forms = array();
@@ -292,10 +300,10 @@ class GF_Migrate_NF extends GFAddOn {
 			$nf_form = gf_migrate_ninjaforms_api()->get_form( $ninja_form_id );
 
 			// Convert form.
-			$gf_form = $this->convert_form( $nf_form );
+			$gf_form = $this->convert_nf2_form( $nf_form );
 			
 			// Convert submissions.
-			$entries = $this->convert_submissions( $nf_form, $gf_form );
+			$entries = $this->convert_nf2_submissions( $nf_form, $gf_form );
 
 			// Save entries.
 			GFAPI::add_entries( $entries, $gf_form['id'] );
@@ -310,16 +318,23 @@ class GF_Migrate_NF extends GFAddOn {
 
 	}
 
+
+
+
+
+	// # NINJA FORMS 2 MIGRATION ---------------------------------------------------------------------------------------
+
 	/**
-	 * Converts a Ninja Form to a Gravity Form.
+	 * Converts a Ninja Forms 2 form to a Gravity Forms form.
 	 *
 	 * @since  0.1
 	 * @access public
-	 * @param  array $ninja_form The Ninja Forms form being converted.
 	 *
-	 * @return array $form The newly created Gravity Forms form object.
+	 * @param  array $nf_form The Ninja Forms form being converted.
+	 *
+	 * @return array $form
 	 */
-	public function convert_form( $nf_form ) {
+	public function convert_nf2_form( $nf_form ) {
 
 		// Create a new Gravity Forms form object.
 		$gf_form = array(
@@ -369,7 +384,7 @@ class GF_Migrate_NF extends GFAddOn {
 
 		// Prepare notifications.
 		foreach ( $nf_form->notifications as $nf_notification ) {
-			$gf_form = $this->convert_notification( $gf_form, $nf_notification );
+			$gf_form = $this->convert_nf2_notification( $gf_form, $nf_notification );
 		}
 
 		// If no confirmations exist, add the default notification.
@@ -400,16 +415,17 @@ class GF_Migrate_NF extends GFAddOn {
 	}
 
 	/**
-	 * Convert a Ninja Forms notification to a Gravity Forms notification/confirmation.
+	 * Convert a Ninja Forms 2 notification to a Gravity Forms notification/confirmation.
 	 *
 	 * @since  0.1
 	 * @access public
-	 * @param  array $gf_form         The new Gravity Forms form object.
-	 * @param  array $nf_notification The Ninja Forms notification.
+	 *
+	 * @param array $gf_form         The new Gravity Forms form object.
+	 * @param array $nf_notification The Ninja Forms notification.
 	 *
 	 * @return array $form The Gravity Forms form object
 	 */
-	public function convert_notification( $gf_form, $nf_notification ) {
+	public function convert_nf2_notification( $gf_form, $nf_notification ) {
 
 		switch ( $nf_notification['type'] ) {
 
@@ -477,16 +493,17 @@ class GF_Migrate_NF extends GFAddOn {
 	}
 
 	/**
-	 * Convert Ninja Forms submissions to Gravity Forms entries.
+	 * Convert Ninja Forms 2 submissions to Gravity Forms entries.
 	 *
 	 * @since  0.1
 	 * @access public
-	 * @param  array $nf_form The Ninja Forms form being converted.
-	 * @param  array $gf_form The new Gravity Forms form object.
+	 *
+	 * @param array $nf_form The Ninja Forms form being converted.
+	 * @param array $gf_form The new Gravity Forms form object.
 	 *
 	 * @return array $entries Containing multiple Gravity Forms entry objects
 	 */
-	public function convert_submissions( $nf_form, $gf_form ) {
+	public function convert_nf2_submissions( $nf_form, $gf_form ) {
 
 		// Create array to story entries.
 		$entries = array();
@@ -548,13 +565,66 @@ class GF_Migrate_NF extends GFAddOn {
 
 	}
 
+
+
+
+
+	// # NINJA FORMS 3 MIGRATION ---------------------------------------------------------------------------------------
+
+	/**
+	 * Converts a Ninja Forms 3 form to a Gravity Forms form.
+	 *
+	 * @since  0.2
+	 * @access public
+	 *
+	 * @param array $nf_form The Ninja Forms form being converted.
+	 *
+	 * @return array $form
+	 */
+	public function convert_nf3_form( $nf_form ) {}
+
+	/**
+	 * Convert a Ninja Forms 3 notification to a Gravity Forms notification/confirmation.
+	 *
+	 * @since  0.2
+	 * @access public
+	 *
+	 * @param array $gf_form         The new Gravity Forms form object.
+	 * @param array $nf_notification The Ninja Forms notification.
+	 *
+	 * @return array $form The Gravity Forms form object
+	 */
+	public function convert_nf3_notification( $gf_form, $nf_notification ) {}
+
+	/**
+	 * Convert Ninja Forms 3 submissions to Gravity Forms entries.
+	 *
+	 * @since  0.2
+	 * @access public
+	 *
+	 * @param array $nf_form The Ninja Forms form being converted.
+	 * @param array $gf_form The new Gravity Forms form object.
+	 *
+	 * @return array $entries Containing multiple Gravity Forms entry objects
+	 */
+	public function convert_nf3_submissions( $nf_form, $gf_form ) {}
+
+
+
+
+
+	// # HELPER METHODS ------------------------------------------------------------------------------------------------
+
 	/**
 	 * Converts any Ninja Forms shortcodes in a string to Gravity Forms merge tags.
 	 *
 	 * @since  0.1
 	 * @access public
-	 * @param  array  $gf_form The Gravity Forms form object.
-	 * @param  string $text    The Ninja Forms merge tag. (default: '')
+	 *
+	 * @param array  $gf_form The Gravity Forms form object.
+	 * @param string $text    The Ninja Forms merge tag. (default: '')
+	 *
+	 * @uses GFFormsModel::get_field()
 	 *
 	 * @return string
 	 */
@@ -603,9 +673,11 @@ class GF_Migrate_NF extends GFAddOn {
 	 * @since  0.1
 	 * @access public
 	 *
-	 * @param  array  $gf_form The Gravity Forms form object.
-	 * @param  string $text    The string to convert.
-	 * @param  bool   $csv     Convert to CSV. (default: true)
+	 * @param array  $gf_form The Gravity Forms form object.
+	 * @param string $text    The string to convert.
+	 * @param bool   $csv     Convert to CSV. (default: true)
+	 *
+	 * @uses GFFormsModel::get_field()
 	 *
 	 * @return string
 	 */

@@ -12,7 +12,7 @@ interface GF_Migrate_NF_API {
 
 }
 
-class GF_Migrate_NF_API_2 implements GF_Migrate_NF_API {
+class GF_Migrate_NF2_API implements GF_Migrate_NF_API {
 
 	/**
 	 * The instance of this class.  Used to instantiate.
@@ -148,7 +148,7 @@ class GF_Migrate_NF_API_2 implements GF_Migrate_NF_API {
 
 }
 
-class GF_Migrate_NF_API_3 implements GF_Migrate_NF_API {
+class GF_Migrate_NF3_API implements GF_Migrate_NF_API {
 
 	/**
 	 * The instance of this class.  Used to instantiate.
@@ -259,8 +259,8 @@ class GF_Migrate_NF_API_3 implements GF_Migrate_NF_API {
  * Returns an instance of the Ninja Forms Migration API library
  * based on active version of Ninja Forms.
  *
- * @see    GF_Migrate_NF_API_2::get_instance()
- * @see    GF_Migrate_NF_API_3::get_instance()
+ * @see    GF_Migrate_NF2_API::get_instance()
+ * @see    GF_Migrate_NF3_API::get_instance()
  *
  * @return object
  */
@@ -275,9 +275,9 @@ function gf_migrate_ninjaforms_api() {
 
 	// Return API library based on active version
 	if ( version_compare( $nf_version, '3.0', '>' ) ) {
-		return GF_Migrate_NF_API_3::get_instance();
+		return GF_Migrate_NF2_API::get_instance();
 	} else {
-		return GF_Migrate_NF_API_2::get_instance();
+		return GF_Migrate_NF3_API::get_instance();
 	}
 
 }
