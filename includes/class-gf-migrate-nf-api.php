@@ -1,62 +1,70 @@
 <?php
 
-class GF_Migrate_NF_API {
+interface GF_Migrate_NF_API {
 
-	public static $objects_table       = 'nf_objects';
-	public static $objects_meta_table  = 'nf_objectmeta';
-	public static $relationships_table = 'nf_relationships';
-	public static $form_fields_table   = 'ninja_forms_fields';
+	public function get_forms();
+
+	public function get_form( $form_id );
+
+	public function get_form_notifications( $form_id = null );
+
+	public function get_submissions( $form_id );
+
+}
+
+class GF_Migrate_NF_API_2 implements GF_Migrate_NF_API {
+
+	/**
+	 * The instance of this class.  Used to instantiate.
+	 *
+	 * @since  0.2
+	 * @access protected
+	 * @var    object $_instance The instance
+	 */
+	private static $_instance = null;
+
+	/**
+	 * Get an instance of this class.
+	 *
+	 * @since  0.1
+	 * @access public
+	 * @static
+	 *
+	 * @return object $_instance The instance of this object
+	 */
+	public static function get_instance() {
+
+		if ( null === self::$_instance ) {
+			self::$_instance = new self;
+		}
+
+		return self::$_instance;
+	}
 
 	/**
 	 * Get all Ninja Forms.
 	 *
+	 * @since  0.1
 	 * @access public
-	 * @static
-	 * @param int|array $form_ids (default: null)
-	 * @return array $forms
+	 *
+	 * @return array
 	 */
-	public static function get_forms( $form_ids = null ) {
+	public function get_forms() {
 
-		global $wpdb;
-
-		// Prepare return array.
+		// Initialize forms array.
 		$forms = array();
 
-		// If form IDs are defined, prepare them for use.
-		if ( ! rgblank( $form_ids ) ) {
-
-			if ( ! is_array( $form_ids ) ) {
-				$form_ids = explode( ',', $form_ids );
-			}
-
-		} else {
-
-			// Get table name.
-			$objects_table = self::$objects_table;
-
-			// Get form IDs.
-			$form_ids = $wpdb->get_col( $wpdb->prepare( "SELECT id FROM {$wpdb->prefix}{$objects_table} WHERE `type` = '%s';", 'form' ) );
-
-		}
-
 		// Get forms.
-		if ( ! empty( $form_ids ) ) {
+		$nf_forms = Ninja_Forms()->forms()->get_all();
 
-			foreach ( $form_ids as $form_id ) {
+		// Loop through forms.
+		foreach ( $nf_forms as $form_id ) {
 
-				// Get form.
-				$form = self::get_form( $form_id );
-
-				// If form is an array, push it to the forms array.
-				if ( is_array( $form ) ) {
-					$forms[ $form_id ] = $form;
-				}
-
-			}
+			// Add to forms array.
+			$forms[ $form_id ] = Ninja_Forms()->form( $form_id );
 
 		}
 
-		// Return forms.
 		return $forms;
 
 	}
@@ -64,217 +72,205 @@ class GF_Migrate_NF_API {
 	/**
 	 * Get a Ninja Form.
 	 *
+	 * @since  0.1
 	 * @access public
-	 * @static
-	 * @param int $form_id (default: null)
-	 * @return array $form
-	 */
-	public static function get_form( $form_id = null ) {
-
-		global $wpdb;
-
-		// Create the return array.
-		$form = array();
-
-		// If no form ID is provided, return.
-		if ( rgblank( $form_id ) ) {
-			return $form;
-		}
-
-		// Get form meta.
-		$meta_table = self::$objects_meta_table;
-		$form_meta  = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$wpdb->prefix}{$meta_table} WHERE `object_id` = '%d';", $form_id ) );
-
-		// If form meta is empty, return null.
-		if ( empty( $form_meta ) ) {
-			return null;
-		}
-
-		// Prepare form meta.
-		foreach ( $form_meta as $meta ) {
-			$form[ $meta->meta_key ] = $meta->meta_value;
-		}
-
-		// If form title does not exist, object is not a form. Return null.
-		if ( ! isset( $form['form_title'] ) ) {
-			return null;
-		}
-
-		// Push fields and notifications to form.
-		$form['fields']        = self::get_form_fields( $form_id );
-		$form['notifications'] = self::get_form_notifications( $form_id );
-
-		// Add form ID.
-		$form['id'] = $form_id;
-
-		// Return form.
-		return $form;
-
-	}
-
-	/**
-	 * Get fields for a Ninja Form.
 	 *
-	 * @access private
-	 * @static
-	 * @param int $form_id (default: null)
-	 * @return array $fields
+	 * @param int $form_id Form ID to retrieve.
+	 *
+	 * @return object
 	 */
-	private static function get_form_fields( $form_id = null ) {
+	public function get_form( $form_id = null ) {
 
-		global $wpdb;
+		// Get form.
+		$nf_form = Ninja_Forms()->form( $form_id );
 
-		// Create the return array.
-		$fields = array();
+		// Get form notifications.
+		$nf_form->notifications = $this->get_form_notifications( $form_id );
 
-		// If no form ID is provided, return.
-		if ( rgblank( $form_id ) ) {
-			return $fields;
-		}
-
-		// Get table name.
-		$form_fields_table = self::$form_fields_table;
-
-		// Get form fields
-		$_fields = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}{$form_fields_table} WHERE `form_id` = '%d' ORDER BY `order`, `id` DESC;", $form_id ), ARRAY_A );
-
-		// Prepare form fields and add them to the return array.
-		if ( ! empty( $_fields ) ) {
-
-			foreach ( $_fields as $field ) {
-
-				// Convert field data to array.
-				$field_data = maybe_unserialize( $field['data'] );
-
-				// Merge field data into field object.
-				$field = array_merge( $field, $field_data );
-
-				// Remove field data from field object.
-				unset( $field['data'] );
-
-				// Push to fields array.
-				$fields[] = $field;
-
-			}
-
-		}
-
-		// Return fields.
-		return $fields;
+		return $nf_form;
 
 	}
 
 	/**
 	 * Get notifications for a Ninja Form.
 	 *
-	 * @access private
-	 * @static
-	 * @param int $form_id (default: null)
-	 * @return array $notifications
+	 * @since  0.1
+	 * @access public
+	 *
+	 * @param int $form_id Form ID to retrieve notifications for.
+	 *
+	 * @return array
 	 */
-	private static function get_form_notifications( $form_id = null ) {
+	public function get_form_notifications( $form_id = null ) {
 
-		global $wpdb;
-
-		// Create the return array.
-		$notifications = array();
-
-		// If no form ID is provided, return.
-		if ( rgblank( $form_id ) ) {
-			return $notifications;
-		}
-
-		// Get needed table names.
-		$meta_table          = self::$objects_meta_table;
-		$relationships_table = self::$relationships_table;
-
-		// Get notification IDs.
-		$notification_ids = $wpdb->get_col( $wpdb->prepare( "SELECT child_id FROM {$wpdb->prefix}{$relationships_table} WHERE `parent_id` = '%d' AND `child_type` = '%s' AND `parent_type` = '%s';", $form_id, 'notification', 'form' ) );
-
-		// Get notifications.
-		foreach ( $notification_ids as $notification_id ) {
-
-			$notification = array();
-
-			// Get notification meta.
-			$notification_meta = $wpdb->get_results( $wpdb->prepare( "SELECT meta_key, meta_value FROM {$wpdb->prefix}{$meta_table} WHERE `object_id` = '%d';", $notification_id ) );
-
-			// Prepare notification meta.
-			foreach ( $notification_meta as $meta ) {
-				$notification[ $meta->meta_key ] = $meta->meta_value;
-			}
-
-			// Push to notifications array.
-			$notifications[] = $notification;
-
-		}
-
-		// Return notifications.
-		return $notifications;
+		return nf_get_notifications_by_form_id( $form_id );
 
 	}
 
 	/**
 	 * Get submissions for a Ninja Form.
 	 *
+	 * @since  0.1
 	 * @access public
-	 * @static
-	 * @param int $form_id (default: null)
-	 * @return array $submissions
+	 *
+	 * @param int $form_id Form ID to retrieve submissions for.
+	 *
+	 * @return array
 	 */
-	public static function get_submissions( $form_id = null ) {
+	public function get_submissions( $form_id ) {
 
-		// Create the return array.
+		// Initialize submissions array.
 		$submissions = array();
 
-		// If no form ID is provided, return.
-		if ( rgblank( $form_id ) ) {
-			return $submissions;
-		}
+		// Prepare submissions arguments.
+		$args = array( 'form_id' => $form_id );
 
-		// Get submission posts.
-		$_submissions = new WP_Query( array(
-			'meta_key'   => '_form_id',
-			'meta_value' => absint( $form_id ),
-			'nopaging'   => true,
-			'post_type'  => 'nf_sub',
-		) );
+		// Loop through submissions.
+		foreach ( Ninja_Forms()->subs()->get( $args ) as $nf_submission ) {
 
-		// Get submission objects and push to submissions array.
-		if ( ! empty( $_submissions->posts ) ) {
+			// Prepare submission object.
+			$submission = array(
+				'date_created' => $nf_submission->date_submitted,
+				'created_by'   => $nf_submission->user_id,
+			);
 
-			foreach ( $_submissions->posts as $_submission ) {
+			// Add fields to submission.
+			$submission = array_merge( $submission, $nf_submission->get_all_fields() );
 
-				// Prepare submission object.
-				$submission = array(
-					'date_created' => $_submission->post_date,
-					'created_by'   => $_submission->post_author,
-				);
-
-				// Get the submission data.
-				$_submission_meta = get_post_meta( $_submission->ID );
-
-				// Push needed data to submission object.
-				foreach ( $_submission_meta as $entry_id => $value ) {
-
-					if ( strpos( $entry_id, '_field_' ) !== 0 ) {
-						continue;
-					}
-
-					$entry_id                = str_replace( '_field_', '', $entry_id );
-					$submission[ $entry_id ] = $value[0];
-
-				}
-
-				$submissions[] = $submission;
-
-			}
+			// Add submission to array.
+			$submissions[] = $submission;
 
 		}
 
-		// Return the submissions.
 		return $submissions;
 
+	}
+
+}
+
+class GF_Migrate_NF_API_3 implements GF_Migrate_NF_API {
+
+	/**
+	 * The instance of this class.  Used to instantiate.
+	 *
+	 * @since  0.2
+	 * @access protected
+	 * @var    object $_instance The instance
+	 */
+	private static $_instance = null;
+
+	/**
+	 * Get an instance of this class.
+	 *
+	 * @since  0.1
+	 * @access public
+	 * @static
+	 *
+	 * @return object $_instance The instance of this object
+	 */
+	public static function get_instance() {
+
+		if ( null === self::$_instance ) {
+			self::$_instance = new self;
+		}
+
+		return self::$_instance;
+	}
+
+	/**
+	 * Get all Ninja Forms.
+	 *
+	 * @since  0.1
+	 * @access public
+	 *
+	 * @return array
+	 */
+	public function get_forms() {
+
+		// Initialize forms array.
+		$forms = array();
+
+		// Get forms.
+		$nf_forms = Ninja_Forms()->form()->get_forms();
+
+		// If no forms were found, return.
+		if ( empty( $nf_forms ) ) {
+			return $forms;
+		}
+
+		// Loop through forms.
+		foreach ( $nf_forms as $form ) {
+
+			// Add to forms array.
+			$forms[ $form->get_id() ] = $form;
+
+		}
+
+		return $forms;
+
+	}
+
+	/**
+	 * Get a Ninja Form.
+	 *
+	 * @since  0.1
+	 * @access public
+	 *
+	 * @param int $form_id Form ID to retrieve.
+	 *
+	 * @return object
+	 */
+	public function get_form( $form_id = null ) {}
+
+	/**
+	 * Get notifications for a Ninja Form.
+	 *
+	 * @since  0.1
+	 * @access public
+	 *
+	 * @param int $form_id Form ID to retrieve notifications for.
+	 *
+	 * @return array
+	 */
+	public function get_form_notifications( $form_id = null ) {}
+
+	/**
+	 * Get submissions for a Ninja Form.
+	 *
+	 * @since  0.1
+	 * @access public
+	 *
+	 * @param int $form_id Form ID to retrieve submissions for.
+	 *
+	 * @return array
+	 */
+	public function get_submissions( $form_id ) {}
+
+}
+
+/**
+ * Returns an instance of the Ninja Forms Migration API library
+ * based on active version of Ninja Forms.
+ *
+ * @see    GF_Migrate_NF_API_2::get_instance()
+ * @see    GF_Migrate_NF_API_3::get_instance()
+ *
+ * @return object
+ */
+function gf_migrate_ninjaforms_api() {
+
+	// Get active Ninja Forms version.
+	if ( '1' == get_option( 'ninja_forms_load_deprecated' ) ) {
+		$nf_version = get_option( 'nf_version_upgrade_from' );
+	} else {
+		$nf_version = get_option( 'ninja_forms_version' );
+	}
+
+	// Return API library based on active version
+	if ( version_compare( $nf_version, '3.0', '>' ) ) {
+		return GF_Migrate_NF_API_3::get_instance();
+	} else {
+		return GF_Migrate_NF_API_2::get_instance();
 	}
 
 }

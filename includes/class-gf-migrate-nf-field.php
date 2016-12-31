@@ -8,9 +8,9 @@ class GF_Migrate_NF_Field {
 	 * @since  0.1
 	 * @access public
 	 * @static
-	 * @var mixed $field The Gravity Forms field object
+	 * @var array $field The Gravity Forms field properties.
 	 */
-	public static $field = null;
+	public static $field = array();
 
 	/**
 	 * The Ninja Forms field data that is being converted
@@ -33,6 +33,9 @@ class GF_Migrate_NF_Field {
 	 */
 	public static function convert_field( $nf_field ) {
 
+		// Reset field.
+		self::$field = array();
+
 		// Stores the field to be converted within the class property for use later
 		self::$nf_field = $nf_field;
 
@@ -42,15 +45,18 @@ class GF_Migrate_NF_Field {
 			case '_checkbox':
 				self::convert_single_checkbox_field();
 				break;
+
 			case '_desc':
 				self::convert_html_field();
 				break;
+
 			case '_hidden':
 				self::convert_hidden_field();
 				break;
+
 			case '_list':
 
-				$list_type = rgar( self::$nf_field, 'list_type' );
+				$list_type = rgars( self::$nf_field, 'data/list_type' );
 
 				if ( 'checkbox' === $list_type ) {
 					self::convert_checkbox_field();
@@ -67,18 +73,19 @@ class GF_Migrate_NF_Field {
 			case '_number':
 				self::convert_number_field();
 				break;
+
 			case '_profile_pass':
 				self::convert_password_field();
 				break;
-			case '_text':
 
-				if ( '1' === self::$nf_field['user_email'] ) {
+			case '_text':
+				if ( '1' === self::$nf_field['data']['user_email'] ) {
 					self::convert_email_field();
-				} else if ( 'date' === self::$nf_field['mask'] ) {
+				} else if ( 'date' === self::$nf_field['data']['mask'] ) {
 					self::convert_date_field();
-				} else if ( 'currency' === self::$nf_field['mask'] ) {
+				} else if ( 'currency' === self::$nf_field['data']['mask'] ) {
 					self::convert_number_field();
-				} else if ( '(999) 999-9999' === self::$nf_field['mask'] || '1' === self::$nf_field['user_phone'] ) {
+				} else if ( '(999) 999-9999' === self::$nf_field['data']['mask'] || '1' === self::$nf_field['data']['user_phone'] ) {
 					self::convert_phone_field();
 				} else {
 					self::convert_text_field();
@@ -105,16 +112,13 @@ class GF_Migrate_NF_Field {
 	public static function convert_checkbox_field() {
 
 		// Create a new Checkbox field.
-		self::$field = new GF_Field_Checkbox();
+		self::$field['type'] = 'checkbox';
 
 		// Add standard properties.
 		self::add_standard_properties();
 
-		// Add choices property.
-		self::$field->choices = array();
-
 		// Loop through field options.
-		foreach ( self::$nf_field['list']['options'] as $i => $option ) {
+		foreach ( self::$nf_field['data']['list']['options'] as $i => $option ) {
 
 			// Get checkbox ID.
 			$id = $i + 1;
@@ -125,15 +129,15 @@ class GF_Migrate_NF_Field {
 			}
 
 			// Add option choices.
-			self::$field->choices[] = array(
+			self::$field['choices'][] = array(
 				'text'       => $option['label'],
 				'value'      => $option['value'],
 				'isSelected' => $option['selected'],
 			);
 
 			// Add option input.
-			self::$field->inputs[] = array(
-				'id'    => self::$field->id . '.' . $id,
+			self::$field['inputs'][] = array(
+				'id'    => self::$field['id'] . '.' . $id,
 				'label' => $option['label'],
 			);
 
@@ -150,13 +154,13 @@ class GF_Migrate_NF_Field {
 	public static function convert_date_field() {
 
 		// Create a new Phone field.
-		self::$field = new GF_Field_Date();
+		self::$field['type'] = 'date';
 
 		// Add standard properties.
 		self::add_standard_properties();
 
 		// Add Phone specific properties.
-		self::$field->dateFormat = 'dd/mm/yyyy';
+		self::$field['dateFormat'] = 'dd/mm/yyyy';
 
 	}
 
@@ -169,7 +173,7 @@ class GF_Migrate_NF_Field {
 	public static function convert_email_field() {
 
 		// Create a new Email field.
-		self::$field = new GF_Field_Email();
+		self::$field['type'] = 'email';
 
 		// Add standard properties.
 		self::add_standard_properties();
@@ -185,7 +189,7 @@ class GF_Migrate_NF_Field {
 	public static function convert_hidden_field() {
 
 		// Create a new Hidden field.
-		self::$field = new GF_Field_Hidden();
+		self::$field['type'] = 'hidden';
 
 		// Add standard properties.
 		self::add_standard_properties();
@@ -201,15 +205,15 @@ class GF_Migrate_NF_Field {
 	public static function convert_html_field() {
 
 		// Create a new HTML field.
-		self::$field = new GF_Field_HTML();
+		self::$field['type'] = 'html';
 
 		// Add standard properties.
-		self::$field->id           = rgar( self::$nf_field, 'id' );
-		self::$field->label        = rgar( self::$nf_field, 'label' );
-		self::$field->cssClass     = rgar( self::$nf_field, 'class' );
+		self::$field['id']       = rgar( self::$nf_field, 'id' );
+		self::$field['label']    = rgars( self::$nf_field, 'data/label' );
+		self::$field['cssClass'] = rgars( self::$nf_field, 'data/class' );
 
 		// Add HTML specific properties.
-		self::$field->content = self::$nf_field['default_value'];
+		self::$field['content'] = rgars( self::$nf_field, 'data/default_value' );
 
 	}
 
@@ -222,18 +226,18 @@ class GF_Migrate_NF_Field {
 	public static function convert_number_field() {
 
 		// Create a new Number field.
-		self::$field = new GF_Field_Number();
+		self::$field['type'] = 'number';
 
 		// Add standard properties.
 		self::add_standard_properties();
 
 		// Add Number specific properties.
-		self::$field->rangeMin = rgar( self::$nf_field, 'number_min' );
-		self::$field->rangeMax = rgar( self::$nf_field, 'number_max' );
+		self::$field['rangeMin'] = rgars( self::$nf_field, 'data/number_min' );
+		self::$field['rangeMax'] = rgars( self::$nf_field, 'data/number_max' );
 
 		// Add currency property if needed.
-		if ( rgar( self::$nf_field, 'mask' ) && 'currency' === self::$nf_field['mask'] ) {
-			self::$field->numberFormat = 'currency';
+		if ( rgars( self::$nf_field, 'data/mask' ) && 'currency' === self::$nf_field['data']['mask'] ) {
+			self::$field['numberFormat'] = 'currency';
 		}
 
 	}
@@ -247,24 +251,24 @@ class GF_Migrate_NF_Field {
 	public static function convert_password_field() {
 
 		// Create a new Password field.
-		self::$field = new GF_Field_Password();
+		self::$field['type'] = 'password';
 
 		// Add standard properties.
 		self::add_standard_properties();
 
 		// Add Password specific properties.
-		self::$field->inputs = array(
+		self::$field['inputs'] = array(
 			array(
 				'id'          => '1',
 				'label'       => esc_html__( 'Enter Password', 'gravityforms' ),
 				'name'        => '',
-				'customLabel' => self::$nf_field['label'],
+				'customLabel' => self::$nf_field['data']['label'],
 			),
 			array(
 				'id'          => '1.2',
 				'label'       => esc_html__( 'Confirm Password', 'gravityforms' ),
 				'name'        => '',
-				'customLabel' => self::$nf_field['re_pass'],
+				'customLabel' => self::$nf_field['data']['re_pass'],
 			),
 		);
 
@@ -279,45 +283,42 @@ class GF_Migrate_NF_Field {
 	public static function convert_phone_field() {
 
 		// Create a new Phone field.
-		self::$field = new GF_Field_Phone();
+		self::$field['type'] = 'phone';
 
 		// Add standard properties.
 		self::add_standard_properties();
 
 		// Add Phone specific properties.
-		self::$field->phoneFormat = 'standard';
+		self::$field['phoneFormat'] = 'standard';
 
 	}
 
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms radio field.
 	 *
-	 * @0.1
+	 * @since 0.1
 	 * @access public
 	 */
 	public static function convert_radio_field() {
 
 		// Create a new Radio field.
-		self::$field = new GF_Field_Radio();
+		self::$field['type'] = 'radio';
 
 		// Add standard properties.
 		self::add_standard_properties();
 
-		// Add choices property.
-		self::$field->choices = array();
-
 		// Loop through field options.
-		foreach ( self::$nf_field['list']['options'] as $option ) {
+		foreach ( self::$nf_field['data']['list']['options'] as $option ) {
 
 			// Add option choice.
-			self::$field->choices[] = array(
+			self::$field['choices'][] = array(
 				'text'  => $option['label'],
 				'value' => $option['value'],
 			);
 
 			// If option is selected, set as default value.
 			if ( '1' === $option['selected'] ) {
-				self::$field->defaultValue = ! empty( $option['value'] ) ? $option['value'] : $option['text'];
+				self::$field['defaultValue'] = ! empty( $option['value'] ) ? $option['value'] : $option['text'];
 			}
 
 		}
@@ -334,26 +335,23 @@ class GF_Migrate_NF_Field {
 	public static function convert_select_field( $multi = false ) {
 
 		// Create a new Select field.
-		self::$field = $multi ? new GF_Field_MultiSelect() : new GF_Field_Select();
+		self::$field['type'] = $multi ? 'multiselect' : 'select';
 
 		// Add standard properties.
 		self::add_standard_properties();
 
-		// Add choices property.
-		self::$field->choices = array();
-
 		// Loop through field options.
-		foreach ( self::$nf_field['list']['options'] as $option ) {
+		foreach ( self::$nf_field['data']['list']['options'] as $option ) {
 
 			// Add option.
-			self::$field->choices[] = array(
+			self::$field['choices'][] = array(
 				'text'  => $option['label'],
 				'value' => $option['value'],
 			);
 
 			// If option is selected, set as default value.
 			if ( '1' === $option['selected'] ) {
-				self::$field->defaultValue = ! empty( $option['value'] ) ? $option['value'] : $option['text'];
+				self::$field['defaultValue'] = ! empty( $option['value'] ) ? $option['value'] : $option['text'];
 			}
 
 		}
@@ -369,19 +367,24 @@ class GF_Migrate_NF_Field {
 	public static function convert_single_checkbox_field() {
 
 		// Create a new Checkbox field.
-		self::$field = new GF_Field_Checkbox();
+		self::$field['type'] = 'checkbox';
 
 		// Add standard properties.
 		self::add_standard_properties();
 
 		// Add choices property.
-		self::$field->choices = array(
+		self::$field['choices'] = array(
 			array(
-				'text'       => self::$nf_field['label'],
+				'text'       => self::$nf_field['data']['label'],
 				'value'      => '',
-				'isSelected' => 'unchecked' === self::$nf_field['default_value'] ? '0' : '1',
+				'isSelected' => 'unchecked' === self::$nf_field['data']['default_value'] ? null : '1',
 			),
 		);
+		
+		// Remove unchecked default value.
+		if ( 'unchecked' === self::$nf_field['data']['default_value'] ) {
+			self::$field['default_value'] = null;
+		}
 
 	}
 
@@ -394,7 +397,7 @@ class GF_Migrate_NF_Field {
 	public static function convert_text_field() {
 
 		// Create a new Text field.
-		self::$field = new GF_Field_Text();
+		self::$field['type'] = 'text';
 
 		// Add standard properties.
 		self::add_standard_properties();
@@ -410,13 +413,13 @@ class GF_Migrate_NF_Field {
 	public static function convert_textarea_field() {
 
 		// Create a new Textarea field.
-		self::$field = new GF_Field_Textarea();
+		self::$field['type'] = 'textarea';
 
 		// Add standard properties.
 		self::add_standard_properties();
 
 		// Add Textarea specific properties.
-		self::$field->useRichTextEditor = rgar( self::$nf_field, 'textarea_rte' );
+		self::$field['useRichTextEditor'] = rgars( self::$nf_field, 'data/textarea_rte' );
 
 	}
 
@@ -429,12 +432,13 @@ class GF_Migrate_NF_Field {
 	public static function add_standard_properties() {
 
 		// Set properties.
-		self::$field->id           = rgar( self::$nf_field, 'id' );
-		self::$field->label        = rgar( self::$nf_field, 'label' );
-		self::$field->adminLabel   = rgar( self::$nf_field, 'admin_label' );
-		self::$field->isRequired   = rgar( self::$nf_field, 'req' );
-		self::$field->cssClass     = rgar( self::$nf_field, 'class' );
-		self::$field->defaultValue = rgar( self::$nf_field, 'default_value_type' ) === '_custom' || rgar( self::$nf_field, 'default_value_type' ) === '' ? rgar( self::$nf_field, 'default_value' ) : null;
+		self::$field['id']           = rgar( self::$nf_field, 'id' );
+		self::$field['label']        = rgars( self::$nf_field, 'data/label' );
+		self::$field['adminLabel']   = rgars( self::$nf_field, 'data/admin_label' );
+		self::$field['isRequired']   = rgars( self::$nf_field, 'data/req' );
+		self::$field['cssClass']     = rgars( self::$nf_field, 'data/class' );
+		self::$field['description']  = rgars( self::$nf_field, 'data/desc_text' );
+		self::$field['defaultValue'] = rgars( self::$nf_field, 'data/default_value_type' ) === '_custom' || rgars( self::$nf_field, 'data/default_value_type' ) === '' ? rgars( self::$nf_field, 'data/default_value' ) : null;
 
 	}
 

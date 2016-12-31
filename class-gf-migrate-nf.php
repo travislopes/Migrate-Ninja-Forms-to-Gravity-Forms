@@ -173,7 +173,7 @@ class GF_Migrate_NF extends GFAddOn {
 		$this->maybe_migrate_forms();
 
 		// Get all forms from Ninja Forms.
-		$forms = GF_Migrate_NF_API::get_forms();
+		$forms = gf_migrate_ninjaforms_api()->get_forms();
 
 		// Display page header.
 		$page_title = esc_html__( 'Migrate Ninja Forms', 'migrate-ninja-forms-to-gravity-forms' );
@@ -195,9 +195,12 @@ class GF_Migrate_NF extends GFAddOn {
 		// Add forms.
 		$html .= '<td><ul>';
 		foreach ( $forms as $form_id => $form ) {
+
+			$form_title = $form->get_setting( 'title' ) ? $form->get_setting( 'title' ) : $form->get_setting( 'form_title' );
+
 			$html .= '<li>';
 			$html .= '<input type="checkbox" name="ninja_form_id[]" id="gf_form_id_' . esc_attr( $form_id ) . '" value="' . esc_attr( $form_id ) . '" />';
-			$html .= '<label for="gf_form_id_' . esc_attr( $form_id ) . '">' . $form['form_title'] . '</label>';
+			$html .= '<label for="gf_form_id_' . esc_attr( $form_id ) . '">' . $form_title . '</label>';
 			$html .= '</li>';
 		}
 		$html .= '</td></ul>';
@@ -274,42 +277,32 @@ class GF_Migrate_NF extends GFAddOn {
 	 */
 	public function migrate_forms( $form_ids = array() ) {
 
-		// Setup array for converted form IDs.
+		// Initialize converted form IDs array.
 		$converted_forms = array();
 
-		// Get Ninja Forms.
-		$ninja_forms = GF_Migrate_NF_API::get_forms( $form_ids );
+		// If no form IDs were provided, return.
+		if ( empty( $form_ids ) ) {
+			return $converted_forms;
+		}
 
-		// Convert and save each form.
-		foreach ( $ninja_forms as $ninja_form_id => $ninja_form ) {
+		// Loop through form IDs.
+		foreach ( $form_ids as $ninja_form_id ) {
+
+			// Get form.
+			$nf_form = gf_migrate_ninjaforms_api()->get_form( $ninja_form_id );
 
 			// Convert form.
-			$form = $this->convert_form( $ninja_form );
-
-			// Save form and capture new ID.
-			$form_id = GFAPI::add_form( $form );
-
-			// If form could not be created, log and continue.
-			if ( is_wp_error( $form_id ) ) {
-
-				// Log error.
-				$this->log_error( __METHOD__ . '(): Form #' . $ninja_form_id . ' could not be migrated; ' . $form_id->get_error_message() );
-
-				continue;
-
-			}
-
-			$form['id'] = $form_id;
-
+			$gf_form = $this->convert_form( $nf_form );
+			
 			// Convert submissions.
-			$entries = $this->convert_submissions( $ninja_form, $form );
+			$entries = $this->convert_submissions( $nf_form, $gf_form );
 
 			// Save entries.
-			GFAPI::add_entries( $entries, $form_id );
+			GFAPI::add_entries( $entries, $gf_form['id'] );
 
 			// Add form ID to converted forms.
-			$converted_forms[] = $form_id;
-
+			$converted_forms[] = $gf_form['id'];
+			
 		}
 
 		// Return converted form IDs.
@@ -326,12 +319,12 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * @return array $form The newly created Gravity Forms form object.
 	 */
-	public function convert_form( $ninja_form ) {
+	public function convert_form( $nf_form ) {
 
 		// Create a new Gravity Forms form object.
-		$form = array(
-			'title'                => rgar( $ninja_form, 'form_title' ), // Form title.
-			'requireLogin'         => rgar( $ninja_form, 'logged_in' ), // Require login.
+		$gf_form = array(
+			'title'                => $nf_form->get_setting( 'form_title' ), // Form title.
+			'requireLogin'         => $nf_form->get_setting( 'logged_in' ), // Require login.
 			'labelPlacement'       => 'top_label',
 			'description'          => '',
 			'descriptionPlacement' => 'below',
@@ -341,36 +334,52 @@ class GF_Migrate_NF extends GFAddOn {
 		);
 
 		// Prepare fields.
-		foreach ( $ninja_form['fields'] as $_field ) {
-
-			// Convert field.
-			$field = GF_Migrate_NF_Field::convert_field( $_field );
-
-			// Save to fields array if converted.
-			if ( ! is_null( $field ) ) {
-				$form['fields'][] = $field;
-			}
+		foreach ( $nf_form->fields as $nf_field ) {
 
 			// If field is a submit field, push label to button form property.
-			if ( '_submit' === $_field['type'] ) {
-				$form['button'] = array(
+			if ( '_submit' === $nf_field['type'] ) {
+
+				$gf_form['button'] = array(
 					'type' => 'text',
-					'text' => $_field['label'],
+					'text' => $nf_field['data']['label'],
 				);
+
+				continue;
+
 			}
+
+			// Convert field.
+			$gf_field = GF_Migrate_NF_Field::convert_field( $nf_field );
+
+			// If field could not be converted, skip it.
+			if ( empty( $gf_field ) ) {
+				continue;
+			}
+
+			// Add to fields array.
+			$gf_form['fields'][] = $gf_field;
 
 		}
 
+		// Convert field objects.
+		$gf_form = GFFormsModel::convert_field_objects( $gf_form );
+
+		// Save form.
+		$gf_form['id'] = GFAPI::add_form( $gf_form ); 
+
 		// Prepare notifications.
-		foreach ( $ninja_form['notifications'] as $nf_notification ) {
-			$form = $this->convert_notification( $form, $nf_notification );
+		foreach ( $nf_form->notifications as $nf_notification ) {
+			$gf_form = $this->convert_notification( $gf_form, $nf_notification );
 		}
 
 		// If no confirmations exist, add the default notification.
 		if ( empty( $form['confirmations'] ) ) {
 
-			$confirmation_id                           = uniqid();
-			$form['confirmations'][ $confirmation_id ] = array(
+			// Generate confirmation ID.
+			$confirmation_id = uniqid();
+
+			// Add confirmation.
+			$gf_form['confirmations'][ $confirmation_id ] = array(
 				'id'          => $confirmation_id,
 				'name'        => __( 'Default Confirmation', 'gravityforms' ),
 				'isDefault'   => true,
@@ -382,8 +391,11 @@ class GF_Migrate_NF extends GFAddOn {
 			);
 
 		}
+		
+		// Update form.
+		GFAPI::update_form( $gf_form );
 
-		return $form;
+		return $gf_form;
 
 	}
 
@@ -392,71 +404,75 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * @since  0.1
 	 * @access public
-	 * @param  array $form            The new Gravity Forms form object.
+	 * @param  array $gf_form         The new Gravity Forms form object.
 	 * @param  array $nf_notification The Ninja Forms notification.
 	 *
 	 * @return array $form The Gravity Forms form object
 	 */
-	public function convert_notification( $form, $nf_notification ) {
+	public function convert_notification( $gf_form, $nf_notification ) {
 
-		// If notification type is redirect, convert to confirmation.
-		if ( 'redirect' === $nf_notification['type'] ) {
+		switch ( $nf_notification['type'] ) {
 
-			// Create a new confirmation.
-			$confirmation = array(
-				'id'       => uniqid(),
-				'isActive' => '1' === $nf_notification['active'] ? true : false,
-				'name'     => $nf_notification['name'],
-				'type'     => 'redirect',
-				'url'      => $nf_notification['redirect_url'],
-			);
+			// Convert to notification.
+			case 'email':
 
-			// Add confirmation to form.
-			$form['confirmations'][ $confirmation['id'] ] = $confirmation;
+				// Create a new notification.
+				$notification = array(
+					'id'       => uniqid(),
+					'isActive' => '1' === $nf_notification['active'] ? true : false,
+					'name'     => $nf_notification['name'],
+					'message'  => $this->convert_to_merge_tags( $gf_form, $nf_notification['email_message'] ),
+					'subject'  => $this->convert_from_backticks( $gf_form, $nf_notification['email_subject'], false ),
+					'to'       => $this->convert_from_backticks( $gf_form, $nf_notification['to'] ),
+					'toType'   => 'email',
+					'from'     => $this->convert_from_backticks( $gf_form, $nf_notification['from_address'] ),
+					'fromName' => $this->convert_from_backticks( $gf_form, $nf_notification['from_name'] ),
+					'replyTo'  => $this->convert_from_backticks( $gf_form, $nf_notification['reply_to'] ),
+					'bcc'      => $this->convert_from_backticks( $gf_form, $nf_notification['bcc'] ),
+				);
+
+				// Add notification to form.
+				$gf_form['notifications'][ $notification['id'] ] = $notification;
+
+				break;
+
+			// Convert to confirmation.
+			case 'redirect':
+
+				// Create a new confirmation.
+				$confirmation = array(
+					'id'       => uniqid(),
+					'isActive' => '1' === $nf_notification['active'] ? true : false,
+					'name'     => $nf_notification['name'],
+					'type'     => 'redirect',
+					'url'      => $nf_notification['redirect_url'],
+				);
+
+				// Add confirmation to form.
+				$gf_form['confirmations'][ $confirmation['id'] ] = $confirmation;
+
+				break;
+
+			// Convert to confirmation.
+			case 'success_message':
+
+				// Create a new confirmation.
+				$confirmation = array(
+					'id'       => uniqid(),
+					'isActive' => '1' === $nf_notification['active'] ? true : false,
+					'name'     => $nf_notification['name'],
+					'type'     => 'message',
+					'message'  => $this->convert_to_merge_tags( $form, $nf_notification['success_msg'] ),
+				);
+
+				// Add confirmation to form.
+				$gf_form['confirmations'][ $confirmation['id'] ] = $confirmation;
+
+				break;
 
 		}
 
-		// If notification type is success message, convert to confirmation.
-		if ( 'success_message' === $nf_notification['type'] ) {
-
-			// Create a new confirmation.
-			$confirmation = array(
-				'id'       => uniqid(),
-				'isActive' => '1' === $nf_notification['active'] ? true : false,
-				'name'     => $nf_notification['name'],
-				'type'     => 'message',
-				'message'  => $this->convert_to_merge_tags( $form, $nf_notification['success_msg'] ),
-			);
-
-			// Add confirmation to form.
-			$form['confirmations'][ $confirmation['id'] ] = $confirmation;
-
-		}
-
-		// If notification type is email, convert to notification.
-		if ( 'email' === $nf_notification['type'] ) {
-
-			// Create a new notification.
-			$notification = array(
-				'id'       => uniqid(),
-				'isActive' => '1' === $nf_notification['active'] ? true : false,
-				'name'     => $nf_notification['name'],
-				'message'  => $this->convert_to_merge_tags( $form, $nf_notification['email_message'] ),
-				'subject'  => $this->convert_from_backticks( $form, $nf_notification['email_subject'], false ),
-				'to'       => $this->convert_from_backticks( $form, $nf_notification['to'] ),
-				'toType'   => 'email',
-				'from'     => $this->convert_from_backticks( $form, $nf_notification['from_address'] ),
-				'fromName' => $this->convert_from_backticks( $form, $nf_notification['from_name'] ),
-				'replyTo'  => $this->convert_from_backticks( $form, $nf_notification['reply_to'] ),
-				'bcc'      => $this->convert_from_backticks( $form, $nf_notification['bcc'] ),
-			);
-
-			// Add notification to form.
-			$form['notifications'][ $notification['id'] ] = $notification;
-
-		}
-
-		return $form;
+		return $gf_form;
 
 	}
 
@@ -465,18 +481,18 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * @since  0.1
 	 * @access public
-	 * @param  array $ninja_form The Ninja Forms form being converted.
-	 * @param  array $form       The new Gravity Forms form object.
+	 * @param  array $nf_form The Ninja Forms form being converted.
+	 * @param  array $gf_form The new Gravity Forms form object.
 	 *
 	 * @return array $entries Containing multiple Gravity Forms entry objects
 	 */
-	public function convert_submissions( $ninja_form, $form ) {
+	public function convert_submissions( $nf_form, $gf_form ) {
 
 		// Create array to story entries.
 		$entries = array();
 
 		// Get submissions.
-		$submissions = GF_Migrate_NF_API::get_submissions( $ninja_form );
+		$submissions = gf_migrate_ninjaforms_api()->get_submissions( $nf_form->form_id );
 
 		// Add needed information to submissions and push to entries array.
 		if ( ! empty( $submissions ) ) {
@@ -484,14 +500,14 @@ class GF_Migrate_NF extends GFAddOn {
 			foreach ( $submissions as $entry ) {
 
 				// Add missing information.
-				$entry['form_id']    = $form['id'];
+				$entry['form_id']    = $gf_form['id'];
 				$entry['is_starred'] = 0;
 				$entry['is_read']    = 0;
 				$entry['ip']         = null;
 				$entry['user_agent'] = esc_html__( 'Ninja Forms Migration', 'migrate-ninja-forms-to-gravity-forms' );
 
 				// Convert any list data.
-				foreach ( $ninja_form['fields'] as $field ) {
+				foreach ( $nf_form->fields as $field ) {
 
 					// If this is not a list field, skip it.
 					if ( '_list' !== rgar( $field, 'type' ) ) {
@@ -537,12 +553,12 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * @since  0.1
 	 * @access public
-	 * @param  array  $form The Gravity Forms form object.
-	 * @param  string $text The Ninja Forms merge tag. (default: '')
+	 * @param  array  $gf_form The Gravity Forms form object.
+	 * @param  string $text    The Ninja Forms merge tag. (default: '')
 	 *
-	 * @return string $text The Gravity Forms merge tag
+	 * @return string
 	 */
-	public function convert_to_merge_tags( $form, $text = '' ) {
+	public function convert_to_merge_tags( $gf_form, $text = '' ) {
 
 		// If no text was provided, return it.
 		if ( rgblank( $text ) ) {
@@ -561,13 +577,16 @@ class GF_Migrate_NF extends GFAddOn {
 			// Get the field id.
 			$field_id = $matches[2][ $i ];
 
+			// Get field.
+			$field = GFFormsModel::get_field( $gf_form, $field_id );
+
 			// Make sure the field exists.
-			if ( ! isset( $form['fields'][ $field_id ] ) ) {
+			if ( ! $field ) {
 				continue;
 			}
 
 			// Prepare merge tag.
-			$merge_tag = '{' . $form['fields'][ $field_id ]->label . ':' . $field_id . '}';
+			$merge_tag = '{' . $field->label . ':' . $field_id . '}';
 
 			// Replace shortcode.
 			$text = str_replace( $shortcode, $merge_tag, $text );
@@ -581,17 +600,16 @@ class GF_Migrate_NF extends GFAddOn {
 	/**
 	 * Convert backticks separated list to a comma separated list.
 	 *
-	 * Backticks in lists are bad, and you should feel bad.
-	 *
 	 * @since  0.1
 	 * @access public
-	 * @param  array  $form The Gravity Forms form object.
-	 * @param  string $text The string to convert.
-	 * @param  bool   $csv  Convert to CSV. (default: true)
 	 *
-	 * @return string $text
+	 * @param  array  $gf_form The Gravity Forms form object.
+	 * @param  string $text    The string to convert.
+	 * @param  bool   $csv     Convert to CSV. (default: true)
+	 *
+	 * @return string
 	 */
-	public function convert_from_backticks( $form, $text = '', $csv = true ) {
+	public function convert_from_backticks( $gf_form, $text = '', $csv = true ) {
 
 		// If no text was provided, return it.
 		if ( rgblank( $text ) ) {
@@ -612,13 +630,16 @@ class GF_Migrate_NF extends GFAddOn {
 			// Get the field ID.
 			$field_id = str_replace( 'field_', '', $part );
 
+			// Get field.
+			$field = GFFormsModel::get_field( $gf_form, $field_id );
+
 			// Make sure the field exists.
-			if ( ! isset( $form['fields'][ $field_id ] ) ) {
+			if ( ! $field ) {
 				continue;
 			}
 
 			// Replace part with merge tag.
-			$part = '{' . $form['fields'][ $field_id ]->label . ':' . $field_id . '}';
+			$part = '{' . $field->label . ':' . $field_id . '}';
 
 		}
 
