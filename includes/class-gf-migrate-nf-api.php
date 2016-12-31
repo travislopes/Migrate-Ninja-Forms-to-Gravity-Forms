@@ -220,7 +220,14 @@ class GF_Migrate_NF_API_3 implements GF_Migrate_NF_API {
 	 *
 	 * @return object
 	 */
-	public function get_form( $form_id = null ) {}
+	public function get_form( $form_id = null ) {
+		
+		// Get form.
+		$nf_form = Ninja_Forms()->form( $form_id );
+		
+		return $nf_form;
+		
+	}
 
 	/**
 	 * Get notifications for a Ninja Form.
