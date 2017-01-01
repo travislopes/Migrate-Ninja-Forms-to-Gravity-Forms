@@ -1,6 +1,6 @@
 <?php
 
-class GF_Migrate_NF_Field {
+class GF_Migrate_NF2_Field {
 
 	/**
 	 * Stores the Gravity Forms field information for the applicable field
@@ -439,6 +439,100 @@ class GF_Migrate_NF_Field {
 		self::$field['cssClass']     = rgars( self::$nf_field, 'data/class' );
 		self::$field['description']  = rgars( self::$nf_field, 'data/desc_text' );
 		self::$field['defaultValue'] = rgars( self::$nf_field, 'data/default_value_type' ) === '_custom' || rgars( self::$nf_field, 'data/default_value_type' ) === '' ? rgars( self::$nf_field, 'data/default_value' ) : null;
+
+	}
+
+}
+
+class GF_Migrate_NF3_Field {
+
+	/**
+	 * Stores the Gravity Forms field information for the applicable field
+	 *
+	 * @since  0.2
+	 * @access public
+	 * @static
+	 * @var array $field The Gravity Forms field properties.
+	 */
+	public static $gf_field = array();
+
+	/**
+	 * The Ninja Forms field data that is being converted
+	 *
+	 * @since  0.2
+	 * @access public
+	 * @static
+	 * @var array $field The Ninja Forms field data
+	 */
+	public static $nf_field = array();
+
+	/**
+	 * Convert a Ninja Forms field to a Gravity Forms field.
+	 *
+	 * @since  0.2
+	 * @access public
+	 * @param  array $nf_field The Ninja Forms field.
+	 *
+	 * @return array $field - The new Gravity Forms field
+	 */
+	public static function convert_field( $nf_field ) {
+
+		// Reset field.
+		self::$gf_field = array();
+
+		// Stores the field to be converted within the class property for use later
+		self::$nf_field = $nf_field;
+		
+		// If Ninja Forms field is supported, convert it.
+		if ( is_callable( array( 'GF_Migrate_NF3_Field', 'convert_' . self::$nf_field->get_setting( 'type' ) . '_field' ) ) ) {
+			call_user_func( array( 'GF_Migrate_NF3_Field', 'convert_' . self::$nf_field->get_setting( 'type' ) . '_field' ) );
+		}
+		
+		return self::$gf_field;
+		
+	}
+	
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms textarea field.
+	 *
+	 * @since  0.2
+	 * @access public
+	 */
+	public static function convert_textarea_field() {
+		
+		// Define field type.
+		self::$gf_field['type'] = 'textarea';
+		
+		// Add standard properties.
+		self::add_standard_properties();
+		
+		// Add textarea properties.
+		self::$gf_field['useRichTextEditor'] = self::$nf_field->get_setting( 'textarea_rte' );
+		self::$gf_field['placeholder']       = self::$nf_field->get_setting( 'placeholder' );
+		
+		// Add maximum characters.
+		if ( self::$nf_field->get_setting( 'input_limit' ) && 'characters' === self::$nf_field->get_setting( 'input_limit_type' ) ) {
+			self::$gf_field['maxLength'] = self::$nf_field->get_setting( 'input_limit' );
+		}
+		
+	}
+	
+	/**
+	 * Adds standard Gravity Forms field properties.
+	 *
+	 * @since  0.2
+	 * @access public
+	 */
+	public static function add_standard_properties() {
+		
+		// Set properties.
+		self::$gf_field['id']           = self::$nf_field->get_id();
+		self::$gf_field['label']        = self::$nf_field->get_setting( 'label' );
+		self::$gf_field['adminLabel']   = self::$nf_field->get_setting( 'admin_label' );
+		self::$gf_field['isRequired']   = self::$nf_field->get_setting( 'required' );
+		self::$gf_field['cssClass']     = self::$nf_field->get_setting( 'container_class' );
+		self::$gf_field['description']  = self::$nf_field->get_setting( 'desc_text' );
+		self::$gf_field['defaultValue'] = self::$nf_field->get_setting( 'default' );
 
 	}
 
