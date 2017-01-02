@@ -223,9 +223,7 @@ class GF_Migrate_NF3_API implements GF_Migrate_NF_API {
 	public function get_form( $form_id = null ) {
 		
 		// Get form.
-		$nf_form = Ninja_Forms()->form( $form_id );
-		
-		return $nf_form;
+		return Ninja_Forms()->form( $form_id )->get();
 		
 	}
 
@@ -275,9 +273,9 @@ function gf_migrate_ninjaforms_api() {
 
 	// Return API library based on active version
 	if ( version_compare( $nf_version, '3.0', '>' ) ) {
-		return GF_Migrate_NF2_API::get_instance();
-	} else {
 		return GF_Migrate_NF3_API::get_instance();
+	} else {
+		return GF_Migrate_NF2_API::get_instance();
 	}
 
 }
