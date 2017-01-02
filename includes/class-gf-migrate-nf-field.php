@@ -380,7 +380,7 @@ class GF_Migrate_NF2_Field {
 				'isSelected' => 'unchecked' === self::$nf_field['data']['default_value'] ? null : '1',
 			),
 		);
-		
+
 		// Remove unchecked default value.
 		if ( 'unchecked' === self::$nf_field['data']['default_value'] ) {
 			self::$field['default_value'] = null;
@@ -482,16 +482,263 @@ class GF_Migrate_NF3_Field {
 
 		// Stores the field to be converted within the class property for use later
 		self::$nf_field = $nf_field;
-		
+
 		// If Ninja Forms field is supported, convert it.
 		if ( is_callable( array( 'GF_Migrate_NF3_Field', 'convert_' . self::$nf_field->get_setting( 'type' ) . '_field' ) ) ) {
 			call_user_func( array( 'GF_Migrate_NF3_Field', 'convert_' . self::$nf_field->get_setting( 'type' ) . '_field' ) );
 		}
-		
+
 		return self::$gf_field;
-		
+
 	}
-	
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms checkbox field.
+	 *
+	 * @since 0.1
+	 * @access public
+	 */
+	public static function convert_listcheckbox_field() {
+
+		// Define field type.
+		self::$gf_field['type'] = 'checkbox';
+
+		// Add standard properties.
+		self::add_standard_properties();
+
+		// Set first checkbox ID.
+		$i = 0;
+
+		// Loop through field options.
+		foreach ( self::$nf_field->get_setting( 'options' ) as $option ) {
+
+			// Get checkbox ID.
+			$id = $i + 1;
+
+			// Skip multiple of 10 on checkbox ID.
+			if ( 0 === $id % 10 ) {
+				$id++;
+			}
+
+			// Add option choices.
+			self::$gf_field['choices'][] = array(
+				'text'       => $option['label'],
+				'value'      => $option['value'],
+				'isSelected' => $option['selected'],
+			);
+
+			// If value is not empty, enable choices.
+			if ( ! empty( $option['value'] ) ) {
+				self::$gf_field['enableChoiceValue'] = true;
+			}
+
+			// Add option input.
+			self::$gf_field['inputs'][] = array(
+				'id'    => self::$gf_field['id'] . '.' . $id,
+				'label' => $option['label'],
+			);
+
+		}
+
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms multi-select field.
+	 *
+	 * @since 0.2
+	 * @access public
+	 */
+	public static function convert_listmultiselect_field() {
+
+		// Create a new Radio field.
+		self::$gf_field['type'] = 'multiselect';
+
+		// Add standard properties.
+		self::add_standard_properties();
+
+		// Define selected flag.
+		$selected = false;
+
+		// Loop through field options.
+		foreach ( self::$nf_field->get_setting( 'options' ) as $option ) {
+
+			// Add option choice.
+			self::$gf_field['choices'][] = array(
+				'text'  => $option['label'],
+				'value' => $option['value'],
+			);
+
+			// If value is not empty, enable choices.
+			if ( ! empty( $option['value'] ) ) {
+				self::$gf_field['enableChoiceValue'] = true;
+			}
+
+			// If option is selected, set as default value.
+			if ( $option['selected'] && ! $selected ) {
+				self::$gf_field['defaultValue'] = ! empty( $option['value'] ) ? $option['value'] : $option['text'];
+				$selected = true;
+			}
+
+		}
+
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms radio field.
+	 *
+	 * @since 0.2
+	 * @access public
+	 */
+	public static function convert_listradio_field() {
+
+		// Create a new Radio field.
+		self::$gf_field['type'] = 'radio';
+
+		// Add standard properties.
+		self::add_standard_properties();
+
+		// Loop through field options.
+		foreach ( self::$nf_field->get_setting( 'options' ) as $option ) {
+
+			// Add option choice.
+			self::$gf_field['choices'][] = array(
+				'text'  => $option['label'],
+				'value' => $option['value'],
+			);
+
+			// If value is not empty, enable choices.
+			if ( ! empty( $option['value'] ) ) {
+				self::$gf_field['enableChoiceValue'] = true;
+			}
+
+			// If option is selected, set as default value.
+			if ( $option['selected'] ) {
+				self::$gf_field['defaultValue'] = ! empty( $option['value'] ) ? $option['value'] : $option['text'];
+			}
+
+		}
+
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms select field.
+	 *
+	 * @since 0.2
+	 * @access public
+	 */
+	public static function convert_listselect_field() {
+
+		// Create a new Radio field.
+		self::$gf_field['type'] = 'select';
+
+		// Add standard properties.
+		self::add_standard_properties();
+
+		// Loop through field options.
+		foreach ( self::$nf_field->get_setting( 'options' ) as $option ) {
+
+			// Add option choice.
+			self::$gf_field['choices'][] = array(
+				'text'  => $option['label'],
+				'value' => $option['value'],
+			);
+
+			// If value is not empty, enable choices.
+			if ( ! empty( $option['value'] ) ) {
+				self::$gf_field['enableChoiceValue'] = true;
+			}
+
+			// If option is selected, set as default value.
+			if ( $option['selected'] ) {
+				self::$gf_field['defaultValue'] = ! empty( $option['value'] ) ? $option['value'] : $option['text'];
+			}
+
+		}
+
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms hidden field.
+	 *
+	 * @since  0.2
+	 * @access public
+	 */
+	public static function convert_hidden_field() {
+
+		// Define field type.
+		self::$gf_field['type'] = 'hidden';
+
+		// Add standard properties.
+		self::add_standard_properties();
+
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms HTML field.
+	 *
+	 * @since 0.2
+	 * @access public
+	 */
+	public static function convert_html_field() {
+
+		// Define field type.
+		self::$gf_field['type'] = 'html';
+
+		// Add standard properties.
+		self::$gf_field['id']       = self::$nf_field->get_id();
+		self::$gf_field['label']    = self::$nf_field->get_setting( 'label' );
+		self::$gf_field['cssClass'] = self::$nf_field->get_setting( 'container_class' );
+
+		// Add HTML specific properties.
+		self::$gf_field['content'] = self::$nf_field->get_setting( 'default' );
+
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms number field.
+	 *
+	 * @since  0.2
+	 * @access public
+	 */
+	public static function convert_number_field() {
+
+		// Define field type.
+		self::$gf_field['type'] = 'number';
+
+		// Add standard properties.
+		self::add_standard_properties();
+
+		// Add number field properties.
+		self::$gf_field['placeholder'] = self::$nf_field->get_setting( 'placeholder' );
+		self::$gf_field['rangeMin']    = self::$nf_field->get_setting( 'number_min' );
+		self::$gf_field['rangeMax']    = self::$nf_field->get_setting( 'number_max' );
+
+	}
+
+	/**
+	 * Convert Ninja Forms field to a Gravity Forms text field.
+	 *
+	 * @since  0.2
+	 * @access public
+	 */
+	public static function convert_textbox_field() {
+
+		// Define field type.
+		self::$gf_field['type'] = 'text';
+
+		// Add standard properties.
+		self::add_standard_properties();
+
+		// Add text field properties.
+		self::$gf_field['placeholder'] = self::$nf_field->get_setting( 'placeholder' );
+
+		// Add maximum characters.
+		if ( self::$nf_field->get_setting( 'input_limit' ) && 'characters' === self::$nf_field->get_setting( 'input_limit_type' ) ) {
+			self::$gf_field['maxLength'] = self::$nf_field->get_setting( 'input_limit' );
+		}
+
+	}
+
 	/**
 	 * Convert Ninja Forms field to a Gravity Forms textarea field.
 	 *
@@ -499,24 +746,24 @@ class GF_Migrate_NF3_Field {
 	 * @access public
 	 */
 	public static function convert_textarea_field() {
-		
+
 		// Define field type.
 		self::$gf_field['type'] = 'textarea';
-		
+
 		// Add standard properties.
 		self::add_standard_properties();
-		
+
 		// Add textarea properties.
 		self::$gf_field['useRichTextEditor'] = self::$nf_field->get_setting( 'textarea_rte' );
 		self::$gf_field['placeholder']       = self::$nf_field->get_setting( 'placeholder' );
-		
+
 		// Add maximum characters.
 		if ( self::$nf_field->get_setting( 'input_limit' ) && 'characters' === self::$nf_field->get_setting( 'input_limit_type' ) ) {
 			self::$gf_field['maxLength'] = self::$nf_field->get_setting( 'input_limit' );
 		}
-		
+
 	}
-	
+
 	/**
 	 * Adds standard Gravity Forms field properties.
 	 *
@@ -524,7 +771,7 @@ class GF_Migrate_NF3_Field {
 	 * @access public
 	 */
 	public static function add_standard_properties() {
-		
+
 		// Set properties.
 		self::$gf_field['id']           = self::$nf_field->get_id();
 		self::$gf_field['label']        = self::$nf_field->get_setting( 'label' );
