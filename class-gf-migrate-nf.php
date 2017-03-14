@@ -265,13 +265,23 @@ class GF_Migrate_NF extends GFAddOn {
 		}
 
 		// Migrate forms.
-		$converted_forms = $this->migrate_nf2_forms( $ninja_form_ids );
+		if ( is_a( gf_migrate_ninjaforms_api(), 'GF_Migrate_NF2_API' ) ) {
+			$converted_forms = $this->migrate_nf2_forms( $ninja_form_ids );
+		} else {
+			$converted_forms = $this->migrate_nf3_forms( $ninja_form_ids );
+		}
 
 		// Display success message.
 		$form_text = count( $converted_forms ) > 1 ? __( 'forms', 'migrate-ninja-forms-to-gravity-forms' ) : __( 'form', 'migrate-ninja-forms-to-gravity-forms' );
 		GFCommon::add_message( sprintf( __( "Gravity Forms migrated %d {$form_text} successfully.", 'migrate-ninja-forms-to-gravity-forms' ), count( $converted_forms ) ) );
 
 	}
+
+
+
+
+
+	// # NINJA FORMS 2 MIGRATION ---------------------------------------------------------------------------------------
 
 	/**
 	 * Migrates forms and submissions from Ninja Forms 2 to Gravity Forms.
@@ -318,12 +328,6 @@ class GF_Migrate_NF extends GFAddOn {
 
 	}
 
-
-
-
-
-	// # NINJA FORMS 2 MIGRATION ---------------------------------------------------------------------------------------
-
 	/**
 	 * Converts a Ninja Forms 2 form to a Gravity Forms form.
 	 *
@@ -364,7 +368,7 @@ class GF_Migrate_NF extends GFAddOn {
 			}
 
 			// Convert field.
-			$gf_field = GF_Migrate_NF_Field::convert_field( $nf_field );
+			$gf_field = GF_Migrate_NF2_Field::convert_field( $nf_field );
 
 			// If field could not be converted, skip it.
 			if ( empty( $gf_field ) ) {
@@ -572,6 +576,51 @@ class GF_Migrate_NF extends GFAddOn {
 	// # NINJA FORMS 3 MIGRATION ---------------------------------------------------------------------------------------
 
 	/**
+	 * Migrates forms and submissions from Ninja Forms 2 to Gravity Forms.
+	 *
+	 * @since  0.1
+	 * @access public
+	 *
+	 * @param array $form_ids The Ninja Forms form IDs being migrated.
+	 *
+	 * @return array $converted_forms List of new Gravity Forms form IDs.
+	 */
+	public function migrate_nf3_forms( $form_ids = array() ) {
+
+		// Initialize converted form IDs array.
+		$converted_forms = array();
+
+		// If no form IDs were provided, return.
+		if ( empty( $form_ids ) ) {
+			return $converted_forms;
+		}
+
+		// Loop through form IDs.
+		foreach ( $form_ids as $ninja_form_id ) {
+
+			// Get form.
+			$nf_form = gf_migrate_ninjaforms_api()->get_form( $ninja_form_id );
+
+			// Convert form.
+			$gf_form = $this->convert_nf3_form( $nf_form );
+			
+			// Convert submissions.
+			$entries = $this->convert_nf3_submissions( $nf_form, $gf_form );
+
+			// Save entries.
+			GFAPI::add_entries( $entries, $gf_form['id'] );
+
+			// Add form ID to converted forms.
+			$converted_forms[] = $gf_form['id'];
+			
+		}
+
+		// Return converted form IDs.
+		return $converted_forms;
+
+	}
+
+	/**
 	 * Converts a Ninja Forms 3 form to a Gravity Forms form.
 	 *
 	 * @since  0.2
@@ -581,7 +630,106 @@ class GF_Migrate_NF extends GFAddOn {
 	 *
 	 * @return array $form
 	 */
-	public function convert_nf3_form( $nf_form ) {}
+	public function convert_nf3_form( $nf_form ) {
+
+	echo '<pre>';
+	
+	//	var_dump( $nf_form->get_settings() );
+		
+		// Create a new Gravity Forms form object.
+		$gf_form = array(
+			'title'                => $nf_form->get_setting( 'title' ),
+			'requireLogin'         => $nf_form->get_setting( 'logged_in' ),
+			'requireLoginMessage'  => $nf_form->get_setting( 'not_logged_in_msg' ),
+			'description'          => '',
+			'descriptionPlacement' => 'below',
+			'labelPlacement'       => 'top_label',
+			'limitEntries'         => $nf_form->get_setting( 'sub_limit_number' ) ? true : false,
+			'limitEntriesCount'    => $nf_form->get_setting( 'sub_limit_number' ),
+			'limitEntriesMessage'  => $nf_form->get_setting( 'sub_limit_msg' ),
+			'cssClass'             => $nf_form->get_setting( 'wrapper_class' ),
+			'fields'               => array(),
+			'confirmations'        => array(),
+			'notifications'        => array(),
+		);
+		
+		// Modify label placement.
+		if ( in_array( $nf_form->get_setting( 'default_label_pos' ), array( 'left', 'right' ) ) ) {
+			$gf_form['labelPlacement'] = $nf_form->get_setting( 'default_label_pos' ) . '_label';
+		}
+	
+		// Get form fields.
+		$nf_fields = Ninja_Forms()->form( $nf_form->get_id() )->get_fields();
+	
+		// Prepare fields.
+		foreach ( $nf_fields as $nf_field ) {
+
+			// If field is a submit field, push label to button form property.
+			if ( 'submit' === $nf_field->get_setting( 'type' ) ) {
+
+				$gf_form['button'] = array(
+					'type' => 'text',
+					'text' => $nf_field->get_setting( 'label' ),
+				);
+
+				continue;
+
+			}
+
+			// Convert field.
+			$gf_field = GF_Migrate_NF3_Field::convert_field( $nf_field );
+
+			// If field could not be converted, skip it.
+			if ( empty( $gf_field ) ) {
+				continue;
+			}
+
+			// Add to fields array.
+			$gf_form['fields'][] = $gf_field;
+
+		}
+
+		// Convert field objects.
+		$gf_form = GFFormsModel::convert_field_objects( $gf_form );
+
+	var_dump( $gf_form );
+	die();
+
+/*
+
+		// Save form.
+		$gf_form['id'] = GFAPI::add_form( $gf_form ); 
+
+		// Prepare notifications.
+		foreach ( $nf_form->notifications as $nf_notification ) {
+			$gf_form = $this->convert_nf2_notification( $gf_form, $nf_notification );
+		}
+
+		// If no confirmations exist, add the default notification.
+		if ( empty( $form['confirmations'] ) ) {
+
+			// Generate confirmation ID.
+			$confirmation_id = uniqid();
+
+			// Add confirmation.
+			$gf_form['confirmations'][ $confirmation_id ] = array(
+				'id'          => $confirmation_id,
+				'name'        => __( 'Default Confirmation', 'gravityforms' ),
+				'isDefault'   => true,
+				'type'        => 'message',
+				'message'     => __( 'Thanks for contacting us! We will get in touch with you shortly.', 'gravityforms' ),
+				'url'         => '',
+				'pageId'      => '',
+				'queryString' => '',
+			);
+
+		}
+		
+		// Update form.
+		GFAPI::update_form( $gf_form );
+*/
+	
+	}
 
 	/**
 	 * Convert a Ninja Forms 3 notification to a Gravity Forms notification/confirmation.
